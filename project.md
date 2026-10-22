@@ -5,7 +5,7 @@ This file is the redacted ITHZ-MCP bootstrap for the current project.
 ## Project
 
 - Name: SHOPLINK Intelligence
-- Local root: `/Users/peterzatyko/Projects/Shoplink Intelligence`
+- Local root: `$HOME/Projects/Shoplink Intelligence`
 - Laravel app root: `platform/`
 - Stage URL: `https://shoplinkstage.1web.sk`
 

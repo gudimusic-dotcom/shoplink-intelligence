@@ -1,57 +1,93 @@
-# SHOPLINK Intelligence GitHub workflow
+# SHOPLINK Intelligence – GitHub és staging workflow
 
-## Source of truth
+## Források és útvonalak
 
-- GitHub repository: `git@github.com:gudimusic-dotcom/shoplink-intelligence.git` (`origin`).
-- Local working folder: `/Users/peterzatyko/Projects/Shoplink Intelligence`.
-- Staging: `https://shoplinkstage.1web.sk`.
-- Staging is a deploy target, not a source checkout.
+- GitHub: `git@github.com:gudimusic-dotcom/shoplink-intelligence.git`
+- Helyi projekt: `$HOME/Projects/Shoplink Intelligence`
+- Laravel alkalmazás helyben: `platform/`
+- Staging: `https://shoplinkstage.1web.sk`
+- A Websupport staging nem Git checkout; a GitHub és a staging külön célpont.
+- GitHub push után a staging nem frissül automatikusan.
 
-## Work from home or office
+## Parancsok, amelyek elégségesek a Codex kéréséhez
+
+### „Stiahni zmeny”
 
 ```bash
-git clone git@github.com:gudimusic-dotcom/shoplink-intelligence.git
-cd "Shoplink Intelligence"
-git checkout main
+cd "$HOME/Projects/Shoplink Intelligence"
+git status --short --branch
 git pull --ff-only origin main
 ```
 
-Before editing:
+Ha van helyi módosítás vagy konfliktusveszély, állj meg és jelezd; ne használj `reset --hard` parancsot.
+
+### „Uploadni zmeny” / „Töltsd fel GitHubra”
+
+Ellenőrzés után checkpoint commit és GitHub push:
 
 ```bash
-sed -n '1,240p' docs/CURRENT_HANDOFF.md
-sed -n '1,220p' docs/WORKSTATE.md
-git status --short --branch
-```
-
-After a verified change:
-
-```bash
-./scripts/finish-work.sh "Short change description"
+cd "$HOME/Projects/Shoplink Intelligence"
+./scripts/finish-work.sh "Rövid változásleírás"
 git push origin main
+git status --short --branch
+git log -1 --oneline
 ```
 
-## Staging deploy
+### „Nasadiť na staging” / „Uploadni na Websupport”
+
+Ez külön művelet a GitHub push után. Stagingre csak akkor tölts, ha ezt külön kéred.
+
+Először száraz futtatás:
 
 ```bash
+cd "$HOME/Projects/Shoplink Intelligence"
 ./scripts/deploy-shoplinkstage.sh --dry-run
+```
+
+Ezután a deploy scriptet használd; backupot készít, feltölt és Laravel cache-t töröl:
+
+```bash
+cd "$HOME/Projects/Shoplink Intelligence"
 ./scripts/deploy-shoplinkstage.sh
 ```
 
-The deploy script creates a remote backup before upload, excludes `.env`, dependencies, generated build output and runtime data, clears Laravel caches, and aborts when a remote Git worktree exists and is dirty. Use `--force` only after reviewing the remote state.
+Ha a script hibát jelez, ne használj `--force` opciót ellenőrzés nélkül.
 
-## Never commit
+## GitHub SSH otthoni gépen
 
-- `.env` or any secret
-- `vendor/`, `node_modules/`, generated caches and logs
-- staging database or uploaded runtime data
-- private SSH keys, tokens, passwords or session files
-
-## Initial GitHub setup
-
-The private repository is already connected. For a fresh checkout:
+Ha a `git clone` `Permission denied (publickey)` hibát ad, a kulcsot explicit módon kell megadni:
 
 ```bash
-git clone git@github.com:gudimusic-dotcom/shoplink-intelligence.git
-cd "Shoplink Intelligence"
+mkdir -p "$HOME/Projects"
+GIT_SSH_COMMAND="ssh -i $HOME/.ssh/github_rma_ed25519 -o IdentitiesOnly=yes" \
+git clone git@github.com:gudimusic-dotcom/shoplink-intelligence.git \
+"$HOME/Projects/Shoplink Intelligence"
 ```
+
+A `~` idézőjelben nem bővül ki; ezért használjuk a `$HOME` változót.
+
+Ha a célmappa már létezik és nem üres, nem kell újra klónozni:
+
+```bash
+cd "$HOME/Projects/Shoplink Intelligence"
+git pull --ff-only origin main
+```
+
+## Websupport SSH adatok
+
+```bash
+ssh -i "$HOME/.ssh/rma_websupport_ed25519" \
+  -p 27498 uid118160@shell.r5.websupport.sk
+```
+
+- Staging app root: `/data/5/f/5f2292be-4c6a-4169-bdd2-f289e9ba12b2/1web.sk/sub/shoplinkstage`
+- A távoli app rootban nincs `platform/` almappa.
+- Blade/PHP módosítás után Laravel cache-t kell törölni.
+- Staging ellenőrzése: `https://shoplinkstage.1web.sk`.
+
+## Amit soha ne commitolj
+
+- `.env`
+- jelszavak, tokenek és privát SSH-kulcsok
+- `vendor/`, `node_modules/`, runtime adatok és logok
+- staging adatbázis vagy feltöltött importfájlok

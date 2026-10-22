@@ -1,0 +1,22 @@
+# ITHZ-MCP local artifacts
+.ithz-install/
+.ithz-context/
+.ithz_mcp/
+.antigravity/
+.claude/
+.cursor/
+project.ithz.lock
+*.auto_mixed_plan.json
+auto_mixed_plan_summary.md
+native_ithz_p9_auto_mixed_plan_matrix.csv
+
+# Local workstation and runtime files
+**/.DS_Store
+.mcp.json
+imports/
+platform/.env*
+!platform/.env.example
+platform/node_modules/
+platform/vendor/
+platform/public/build/
+platform/storage/

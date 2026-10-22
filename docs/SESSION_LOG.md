@@ -2,6 +2,16 @@
 
 This file is append-only.
 
+## 2026-10-22 / GitHub synchronization foundation
+
+- Audited RMA workflow and copied the safe checkpoint/deploy pattern conceptually for Shoplink.
+- Initialized local Git repository on `main`.
+- Added backup-protected staging deploy script and local checkpoint script.
+- Added Git workflow documentation for home/work continuation.
+- Verified the initial tree excludes `.env`, credentials, imports, dependencies, generated assets, runtime data and `.DS_Store`.
+- Initial commit: `37e9453 Initialize Shoplink Intelligence Git workflow`.
+- GitHub remote remains pending because the GitHub account is not currently signed in and the repository does not exist yet.
+
 Purpose:
 - preserve short chronological memory between workstations
 - record what changed in each important work session

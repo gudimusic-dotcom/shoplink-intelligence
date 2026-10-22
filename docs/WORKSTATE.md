@@ -6,8 +6,8 @@
 - Initial checkpoint: `37e9453 Initialize Shoplink Intelligence Git workflow`.
 - Added `scripts/finish-work.sh`, `scripts/deploy-shoplinkstage.sh`, and `docs/AI_WORKFLOW.md`.
 - `.gitignore` excludes secrets, runtime data, dependencies, generated assets, local imports and workstation files.
-- GitHub SSH authentication is available, but private remote repository `shoplink-intelligence` has not yet been created.
-- Next action: create the private GitHub repository, add `origin`, push `main`, then optionally initialize a remote staging worktree for deploy guard checks.
+- Private GitHub repository `git@github.com:gudimusic-dotcom/shoplink-intelligence.git` is connected as `origin`; local `main` tracks `origin/main`.
+- Next action: use `git pull --ff-only origin main` on another workstation, then deploy through `scripts/deploy-shoplinkstage.sh` when needed.
 
 ## Latest Audit - 2026-09-14
 

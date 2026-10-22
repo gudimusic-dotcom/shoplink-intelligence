@@ -11,7 +11,7 @@ Previous local feature work:
 - Latest frontend assets after the category KPI report: `public/build/assets/app-vQK-Wqh6.css` and `public/build/assets/app-D8T4qs8Q.js`.
 
 Latest local feature work:
-- Project Git workflow initialized locally on 2026-10-22 with commit `37e9453`; GitHub `origin` is still pending repository creation.
+- Project Git workflow is synchronized with private GitHub repository `git@github.com:gudimusic-dotcom/shoplink-intelligence.git`; local `main` tracks `origin/main`.
 - Product Stats now uses 100-row server-side pagination per supplier, with filter-preserving previous/next links; full supplier totals remain in the group header. Added query indexes for Product Stats items and incoming feed lookups. Deployed and browser-verified on 2026-10-13.
 - Settings now has confirmed delete actions for imported FDD incoming data and FDD/Hurtel supplier-stock data. Deployed and browser-verified on 2026-10-08; delete actions were not executed during verification.
 - Settings EUR exchange-rate controls now use a space-saving single-row layout: value input followed by currency label. Deployed and browser-verified on 2026-09-28.

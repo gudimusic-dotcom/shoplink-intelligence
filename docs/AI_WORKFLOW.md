@@ -2,7 +2,7 @@
 
 ## Source of truth
 
-- GitHub repository: connect as `origin` after the private repository is created.
+- GitHub repository: `git@github.com:gudimusic-dotcom/shoplink-intelligence.git` (`origin`).
 - Local working folder: `/Users/peterzatyko/Documents/web/Shoplink Intelligence`.
 - Staging: `https://shoplinkstage.1web.sk`.
 - Staging is a deploy target, not a source checkout.
@@ -10,7 +10,7 @@
 ## Work from home or office
 
 ```bash
-git clone git@github.com:gudimusic-dotcom/REPOSITORY_NAME.git
+git clone git@github.com:gudimusic-dotcom/shoplink-intelligence.git
 cd "Shoplink Intelligence"
 git checkout main
 git pull --ff-only origin main
@@ -49,9 +49,9 @@ The deploy script creates a remote backup before upload, excludes `.env`, depend
 
 ## Initial GitHub setup
 
-After creating the exact private GitHub repository:
+The private repository is already connected. For a fresh checkout:
 
 ```bash
-git remote add origin git@github.com:gudimusic-dotcom/REPOSITORY_NAME.git
-git push -u origin main
+git clone git@github.com:gudimusic-dotcom/shoplink-intelligence.git
+cd "Shoplink Intelligence"
 ```

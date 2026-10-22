@@ -10,7 +10,7 @@ This file is append-only.
 - Added Git workflow documentation for home/work continuation.
 - Verified the initial tree excludes `.env`, credentials, imports, dependencies, generated assets, runtime data and `.DS_Store`.
 - Initial commit: `37e9453 Initialize Shoplink Intelligence Git workflow`.
-- GitHub remote remains pending because the GitHub account is not currently signed in and the repository does not exist yet.
+- Private GitHub repository `git@github.com:gudimusic-dotcom/shoplink-intelligence.git` was created, connected as `origin`, and local `main` was pushed successfully.
 
 Purpose:
 - preserve short chronological memory between workstations

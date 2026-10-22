@@ -3,7 +3,7 @@
 ## Source of truth
 
 - GitHub repository: `git@github.com:gudimusic-dotcom/shoplink-intelligence.git` (`origin`).
-- Local working folder: `/Users/peterzatyko/Documents/web/Shoplink Intelligence`.
+- Local working folder: `/Users/peterzatyko/Projects/Shoplink Intelligence`.
 - Staging: `https://shoplinkstage.1web.sk`.
 - Staging is a deploy target, not a source checkout.
 

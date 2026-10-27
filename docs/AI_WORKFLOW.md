@@ -11,11 +11,24 @@
 
 ## Parancsok, amelyek elégségesek a Codex kéréséhez
 
+### Munka kezdése bármely gépen
+
+Git csak az aktuális terminálmappa `.git` könyvtárából tudja, melyik projekten dolgozol. Ezért mindig először lépj be a projektbe, majd frissítsd a távoli állapotot:
+
+```bash
+cd "$HOME/Projects/Shoplink Intelligence"
+git fetch origin
+git pull --ff-only origin main
+```
+
+Ha a `pull --ff-only` megáll, ne dolgozz régi verzióból és ne használj `git push --force` parancsot.
+
 ### „Stiahni zmeny”
 
 ```bash
 cd "$HOME/Projects/Shoplink Intelligence"
 git status --short --branch
+git fetch origin
 git pull --ff-only origin main
 ```
 
@@ -32,6 +45,8 @@ git push origin main
 git status --short --branch
 git log -1 --oneline
 ```
+
+Normál esetben a `git push` régi lokális verziót automatikusan elutasít. `git push --force` tilos; csak külön megerősített helyreállításkor használható.
 
 ### „Nasadiť na staging” / „Uploadni na Websupport”
 

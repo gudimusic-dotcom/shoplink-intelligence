@@ -360,7 +360,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         document.querySelectorAll(`[data-task-panel-title="${task.id}"]`).forEach((element) => {
-            element.textContent = task.title;
+            if (element instanceof HTMLInputElement) {
+                element.value = task.title;
+            } else {
+                element.textContent = task.title;
+            }
         });
 
         document.querySelectorAll(`[data-order-complete-toggle][data-task-id="${task.id}"]`).forEach((element) => {

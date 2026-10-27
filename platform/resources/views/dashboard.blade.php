@@ -20,10 +20,9 @@
                     </div>
                 </div>
 
-                <div class="sl-table-head !grid-cols-[minmax(0,1fr)_48px_136px_108px]">
+                <div class="sl-table-head !grid-cols-[minmax(0,1fr)_48px_108px]" style="grid-template-columns:minmax(0,1fr) 48px 108px;">
                     <span>Task</span>
                     <span>Owner</span>
-                    <span>Stav</span>
                     <span>Termín</span>
                 </div>
 
@@ -32,11 +31,10 @@
                         @php($assigneeInitials = $task->assignedUser ? collect(preg_split('/\s+/', trim($task->assignedUser->name)))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') : 'NA')
                         @php($dueState = $task->due_at ? ($task->due_at->isToday() ? 'today' : ($task->due_at->isPast() ? 'overdue' : null)) : null)
                         <a href="{{ route('tasks.edit', $task) }}" class="sl-dashboard-task-row">
-                            <span class="min-w-0 truncate text-[15px] font-semibold leading-5 text-slate-50">{{ $task->title }}</span>
+                            <span class="sl-dashboard-task-title min-w-0 truncate text-[15px] leading-5 text-slate-50">{{ $task->title }}</span>
                             <span class="hidden lg:block">
                                 <span class="sl-avatar {{ (int) $task->assigned_user_id === (int) $user->id ? 'sl-dashboard-task-avatar-self' : '' }}" title="{{ $task->assignedUser?->name ?? 'Nepriradené' }}">{{ $assigneeInitials }}</span>
                             </span>
-                            <span class="sl-status-menu-button sl-status-menu-button-compact sl-task-status-{{ $task->status }}">{{ $taskStatusLabels[$task->status] ?? $task->status }}</span>
                             @if ($task->due_at)
                                 <span class="sl-dashboard-task-date {{ $dueState === 'overdue' ? 'sl-dashboard-task-date-overdue' : ($dueState === 'today' ? 'sl-dashboard-task-date-today' : 'text-slate-300') }}">
                                     {{ $task->due_at->format('d.m.Y') }}

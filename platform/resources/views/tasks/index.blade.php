@@ -260,7 +260,7 @@
                                         x-on:click.prevent="openTaskEdit({{ $task->id }})"
                                         data-task-edit-open="{{ $task->id }}"
                                         data-task-title="{{ $task->id }}"
-                                        class="truncate text-left text-[15px] font-medium leading-4 text-slate-900 transition hover:text-rose-600"
+                                        class="truncate text-left text-[15px] font-light leading-4 text-slate-900 transition hover:text-rose-600"
                                     >
                                         {{ $task->title }}
                                     </a>
@@ -269,18 +269,26 @@
                                             ⚠️
                                         </span>
                                     @endif
+                                    @if ($task->comments->count() > 0)
+                                        <span class="sl-task-comment-indicator" title="{{ $task->comments->count() }} komentárov">
+                                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                                                <path d="M4 4.75h12a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 16 13.75H9l-3.5 2.5v-2.5H4a1.5 1.5 0 0 1-1.5-1.5v-6A1.5 1.5 0 0 1 4 4.75Z"></path>
+                                            </svg>
+                                            <span>{{ $task->comments->count() }}</span>
+                                        </span>
+                                    @endif
                                 </div>
                                 @if ($showNotes && $task->description)
                                     <p class="sl-task-note hidden lg:block">{{ \Illuminate\Support\Str::limit($task->description, 140) }}</p>
                                 @endif
 
                                 <div class="mt-2 flex flex-wrap items-center gap-2 text-[12px] text-slate-600 lg:hidden">
-                                    <span class="rounded-md bg-slate-100 px-2 py-1 font-medium text-slate-700">
+                                    <span class="rounded-md bg-slate-100 px-2 py-1 font-light text-slate-700">
                                         {{ $task->assignedUser?->name ?? 'Nepriradené' }}
                                     </span>
                                     <span data-task-mobile-due="{{ $task->id }}">
                                         @if ($task->due_at)
-                                            <span class="rounded-md px-2 py-1 font-medium {{ $dueState === 'overdue' ? 'sl-due-chip sl-due-chip-overdue' : ($dueState === 'today' ? 'sl-due-chip sl-due-chip-today' : 'bg-slate-100 text-slate-700') }}">
+                                            <span class="rounded-md px-2 py-1 font-light {{ $dueState === 'overdue' ? 'sl-due-chip sl-due-chip-overdue' : ($dueState === 'today' ? 'sl-due-chip sl-due-chip-today' : 'bg-slate-100 text-slate-700') }}">
                                                 {{ $task->due_at->format('d.m.Y') }}
                                             </span>
                                         @else
@@ -298,7 +306,7 @@
                                 <span class="sl-avatar shrink-0 {{ (int) $task->assigned_user_id === (int) auth()->id() ? 'sl-dashboard-task-avatar-self' : '' }}" title="{{ $task->assignedUser?->name ?? 'Nepriradené' }}">{{ $ownerInitials }}</span>
                             </div>
 
-                            <div class="hidden self-center whitespace-nowrap text-[14px] font-medium lg:block">
+                                    <div class="hidden self-center whitespace-nowrap text-[14px] font-light lg:block">
                                 <span data-task-desktop-due="{{ $task->id }}">
                                     @if ($task->due_at)
                                         <span class="sl-dashboard-task-date {{ $dueState === 'overdue' ? 'sl-dashboard-task-date-overdue' : ($dueState === 'today' ? 'sl-dashboard-task-date-today' : 'text-slate-700') }}">
@@ -597,14 +605,44 @@
                         data-task-edit-sheet
                     class="sl-task-panel h-full w-full max-w-[620px] overflow-y-auto border-l border-slate-200 bg-white shadow-2xl"
                 >
+                        @php($modalStatus = $useOldTaskValues ? old('status', $modalTask->status) : $modalTask->status)
+                        @php($modalPriority = ($useOldTaskValues ? old('priority', $modalTask->ui_priority ?? $modalTask->priority) : ($modalTask->ui_priority ?? $modalTask->priority)) === 'high' ? 'high' : 'normal')
+                        @php($modalCategoryId = (int) ($useOldTaskValues ? old('task_category_id', $modalTask->task_category_id) : $modalTask->task_category_id))
+                        @php($modalCategory = $categories->firstWhere('id', $modalCategoryId))
                         <div class="sticky top-0 z-10 border-b border-slate-200 bg-white/96 px-5 py-4 backdrop-blur">
                             <div class="flex items-start justify-between gap-4">
                                 <div class="min-w-0">
-                                    <p class="sl-kicker">Task edit</p>
-                                    <h2 class="sl-section-title mt-1 truncate" data-task-panel-title="{{ $modalTask->id }}">{{ $modalTask->title }}</h2>
-                                    @if ($modalTask->generatedByUser)
-                                        <p class="mt-1 text-xs font-medium text-slate-500">Vytvoril: {{ $modalTask->generatedByUser->name }}</p>
-                                    @endif
+                                    <div class="flex flex-wrap items-end gap-x-3 gap-y-1">
+                                        <p class="sl-task-category-kicker">{{ $modalCategory?->name ?? 'Bez kategórie' }}</p>
+                                        @if ($modalTask->generatedByUser)
+                                            <p class="text-xs font-medium leading-5 text-slate-500">Vytvoril: {{ $modalTask->generatedByUser->name }}</p>
+                                        @endif
+                                    </div>
+                                    <div class="mt-2 flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            class="sl-order-complete-toggle sl-edit-complete-toggle"
+                                            data-order-complete-toggle
+                                            data-task-id="{{ $modalTask->id }}"
+                                            data-task-status-action="{{ route('tasks.status', $modalTask) }}"
+                                            aria-checked="{{ $modalStatus === 'done' ? 'true' : 'false' }}"
+                                            aria-label="{{ $modalStatus === 'done' ? 'Označiť úlohu ako novú' : 'Označiť úlohu ako vybavenú' }}"
+                                        >
+                                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+                                                <path d="m5 10 3 3 7-7"></path>
+                                            </svg>
+                                        </button>
+                                        <input
+                                            type="text"
+                                            name="title"
+                                            value="{{ $useOldTaskValues ? old('title', $modalTask->title) : $modalTask->title }}"
+                                            form="task-edit-form-{{ $modalTask->id }}"
+                                            data-task-panel-title="{{ $modalTask->id }}"
+                                            class="sl-input sl-panel-input sl-task-panel-title-input"
+                                            style="border:0!important;border-style:none!important;border-width:0!important;border-color:transparent!important;box-shadow:none!important;background:transparent!important;outline:none!important;"
+                                            aria-label="Názov tasku"
+                                        >
+                                    </div>
                                 </div>
 
                                 <button
@@ -623,18 +661,15 @@
                         </div>
 
                         <form
+                            id="task-edit-form-{{ $modalTask->id }}"
                             method="POST"
                             action="{{ route('tasks.update', $modalTask) }}"
                             x-on:submit="$el.querySelector('[name=due_at]').value = $el.querySelector('.sl-field-shell-date input[type=&quot;text&quot;]')?.value ?? ''"
-                            class="space-y-4 px-5 py-5"
+                            class="sl-task-edit-form space-y-4 px-5 py-5"
                         >
                             @csrf
                             @method('PATCH')
                             <input type="hidden" name="due_at" value="{{ $useOldTaskValues ? old('due_at', $modalTask->due_at?->format('Y-m-d')) : $modalTask->due_at?->format('Y-m-d') }}">
-                            @php($modalStatus = $useOldTaskValues ? old('status', $modalTask->status) : $modalTask->status)
-                            @php($modalPriority = ($useOldTaskValues ? old('priority', $modalTask->ui_priority ?? $modalTask->priority) : ($modalTask->ui_priority ?? $modalTask->priority)) === 'high' ? 'high' : 'normal')
-                            @php($modalCategoryId = (int) ($useOldTaskValues ? old('task_category_id', $modalTask->task_category_id) : $modalTask->task_category_id))
-                            @php($modalCategory = $categories->firstWhere('id', $modalCategoryId))
                             <input type="hidden" name="status" value="{{ $modalStatus }}" x-ref="taskStatus{{ $modalTask->id }}">
                             <input type="hidden" name="priority" value="{{ $modalPriority }}" x-ref="taskPriority{{ $modalTask->id }}">
                             <input type="hidden" name="task_category_id" value="{{ $modalCategoryId }}" x-ref="taskCategory{{ $modalTask->id }}">
@@ -646,40 +681,7 @@
                                 </div>
                             @endif
 
-                            <div>
-                                <label class="sl-form-label">Názov tasku</label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    value="{{ $useOldTaskValues ? old('title', $modalTask->title) : $modalTask->title }}"
-                                    class="sl-input sl-panel-input text-[15px]"
-                                >
-                                @if ($useOldTaskValues)
-                                    <x-input-error :messages="$errors->get('title')" class="mt-2" />
-                                @endif
-                            </div>
-
                             <div class="grid gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label class="sl-form-label">Status</label>
-                                    <button
-                                        type="button"
-                                        class="sl-order-complete-control"
-                                        data-order-complete-toggle
-                                        data-task-id="{{ $modalTask->id }}"
-                                        data-task-status-action="{{ route('tasks.status', $modalTask) }}"
-                                        aria-checked="{{ $modalStatus === 'done' ? 'true' : 'false' }}"
-                                        aria-label="{{ $modalStatus === 'done' ? 'Označiť úlohu ako novú' : 'Označiť úlohu ako vybavenú' }}"
-                                    >
-                                        <span class="sl-order-complete-toggle">
-                                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
-                                                <path d="m5 10 3 3 7-7"></path>
-                                            </svg>
-                                        </span>
-                                        <span data-order-complete-label>{{ $modalStatus === 'done' ? 'Vybavená' : 'Nová' }}</span>
-                                    </button>
-                                </div>
-
                                 <div>
                                     <label class="sl-form-label">Priorita</label>
                                     <details class="sl-status-menu">
@@ -761,10 +763,10 @@
                                     </details>
                                 </div>
 
-                                <div class="sm:col-span-2">
+                                <div>
                                     <label class="sl-form-label">Owner</label>
                                     <div class="sl-field-shell">
-                                        <select name="assigned_user_id" class="sl-input sl-panel-input sl-panel-select">
+                                        <select name="assigned_user_id" class="sl-input sl-panel-input sl-panel-select sl-task-owner-select">
                                             <option value="">Nepriradené</option>
                                             @foreach ($users as $userOption)
                                                 <option value="{{ $userOption->id }}" @selected((int) ($useOldTaskValues ? old('assigned_user_id', $modalTask->assigned_user_id) : $modalTask->assigned_user_id) === $userOption->id)>{{ $userOption->name }}</option>

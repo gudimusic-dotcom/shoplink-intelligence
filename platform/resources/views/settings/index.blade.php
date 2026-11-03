@@ -274,7 +274,7 @@
                                         </div>
                                         <div>
                                             <label class="sl-form-label" for="supplier-portal-{{ $loop->index }}">Dodávateľ URL</label>
-                                            <x-ts-input id="supplier-portal-{{ $loop->index }}" name="suppliers[{{ $loop->index }}][portal_url_template]" :value="old('suppliers.'.$loop->index.'.portal_url_template', $link['portal_url_template'])" placeholder="https://...{code}" class="ts-field-reset" />
+                                            <x-ts-input id="supplier-portal-{{ $loop->index }}" name="suppliers[{{ $loop->index }}][portal_url_template]" :value="old('suppliers.'.$loop->index.'.portal_url_template', $link['portal_url_template'])" placeholder="{{ $supplierKey === 'logit' ? 'https://...{dodcode}' : 'https://...{code}' }}" class="ts-field-reset" />
                                         </div>
                                         <div>
                                             <label class="sl-form-label" for="supplier-days-{{ $loop->index }}">Cieľ dní</label>

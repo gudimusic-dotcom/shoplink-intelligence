@@ -577,7 +577,11 @@ class ProductStatController extends Controller
                             ->filter()
                             ->first() ?? 'unknown')
                         : null;
-                    $groupItem->current_supplier_portal_url = $this->buildSupplierPortalUrl($supplierSetting?->portal_url_template, $supplierEan ?: $item->ean);
+                    $groupItem->current_supplier_portal_url = $this->buildSupplierPortalUrl(
+                        $supplierSetting?->portal_url_template,
+                        $supplierEan ?: $item->ean,
+                        $item->supplier_code,
+                    );
                     $groupItem->current_supplier_badge = mb_strtoupper(mb_substr($supplier, 0, 2));
                     $groupItem->target_coverage_days = $targetCoverageDays;
                     $groupItem->recommended_s1_order = filled($groupItem->clearance_flag)
@@ -834,7 +838,11 @@ class ProductStatController extends Controller
                     'sku' => $item->sku,
                     'supplier' => $supplier,
                     'supplier_badge' => mb_strtoupper(mb_substr($supplier, 0, 2)),
-                    'supplier_url' => $this->buildSupplierPortalUrl($supplierSetting?->portal_url_template, $supplierCode ?: $item->ean),
+                    'supplier_url' => $this->buildSupplierPortalUrl(
+                        $supplierSetting?->portal_url_template,
+                        $supplierCode ?: $item->ean,
+                        $item->supplier_code,
+                    ),
                     'stock_s1' => (int) $item->stock_s1,
                     'stock_s2' => (int) $item->stock_s2,
                     'incoming_qty' => $incomingQty,
@@ -908,13 +916,17 @@ class ProductStatController extends Controller
         return ['key' => 'stock', 'label' => 'Dostatok', 'class' => 'sl-status-new'];
     }
 
-    private function buildSupplierPortalUrl(?string $template, ?string $code): ?string
+    private function buildSupplierPortalUrl(?string $template, ?string $code, ?string $dodCode = null): ?string
     {
         if (blank($template) || blank($code)) {
             return null;
         }
 
-        return str_replace(['{code}', '{EAN}', '{ean}'], urlencode($code), $template);
+        return str_replace(
+            ['{code}', '{EAN}', '{ean}', '{dodcode}'],
+            [urlencode($code), urlencode($code), urlencode($code), urlencode($dodCode ?: $code)],
+            $template,
+        );
     }
 
     private function extractSupplierNames(?string $supplierRaw): array

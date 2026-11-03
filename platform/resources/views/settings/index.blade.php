@@ -320,7 +320,7 @@
                                                 <div class="flex flex-wrap items-center justify-end gap-2">
                                                     @if ($link['stock_count'] > 0)
                                                         <span class="text-sm text-slate-950">{{ $link['stock_count'] }} ks{{ $link['stock_checked_at'] ? ' · '.$link['stock_checked_at'] : '' }}</span>
-                                                        @if (in_array($supplierKey, ['fdd', 'hurtel'], true))
+                                                        @if (in_array($supplierKey, ['fdd', 'hurtel', 'logit'], true))
                                                             <button type="submit" form="clear-stock-{{ $loop->index }}" class="sl-btn-secondary !px-2 !py-1.5 !text-rose-600" onclick="return confirm('Naozaj vymazať importovaný sklad dodávateľa {{ $link['supplier'] }}?')">Vymazať dáta</button>
                                                         @endif
                                                     @else
@@ -328,18 +328,20 @@
                                                     @endif
                                                 </div>
                                             </div>
-                                            @if ($supplierKey === 'hurtel' || $supplierKey === 'fdd')
+                                            @if (in_array($supplierKey, ['hurtel', 'fdd', 'logit'], true))
                                                 <div class="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
                                                     <div>
                                                         <label class="sl-form-label" for="supplier-stock-{{ $loop->index }}">Feed URL</label>
-                                                        <x-ts-input id="supplier-stock-{{ $loop->index }}" name="suppliers[{{ $loop->index }}][stock_feed_url]" :value="old('suppliers.'.$loop->index.'.stock_feed_url', $link['stock_feed_url'])" placeholder="URL XML, ZIP alebo CSV" class="ts-field-reset" />
+                                                        <x-ts-input id="supplier-stock-{{ $loop->index }}" name="suppliers[{{ $loop->index }}][stock_feed_url]" :value="old('suppliers.'.$loop->index.'.stock_feed_url', $link['stock_feed_url'])" placeholder="{{ $supplierKey === 'logit' ? 'URL Logit XML' : 'URL XML, ZIP alebo CSV' }}" class="ts-field-reset" />
                                                     </div>
                                                     <div class="flex flex-wrap gap-1">
                                                         <button type="submit" formaction="{{ route('product-stats.import-supplier-stock-url') }}" name="import_stock_supplier_index" value="{{ $loop->index }}" class="sl-btn-primary !px-3 !py-2">Import URL</button>
-                                                        <label class="sl-btn-primary cursor-pointer !px-3 !py-2">
-                                                            Import {{ $supplierKey === 'hurtel' ? 'XML' : 'ZIP/CSV' }}
-                                                            <input form="{{ $supplierKey === 'hurtel' ? 'settings-hurtel-stock-import' : 'settings-fdd-stock-import' }}" type="file" name="file" accept="{{ $supplierKey === 'hurtel' ? '.xml,text/xml' : '.zip,.csv,.txt' }}" class="sr-only" required onchange="this.form.submit()">
-                                                        </label>
+                                                        @if ($supplierKey !== 'logit')
+                                                            <label class="sl-btn-primary cursor-pointer !px-3 !py-2">
+                                                                Import {{ $supplierKey === 'hurtel' ? 'XML' : 'ZIP/CSV' }}
+                                                                <input form="{{ $supplierKey === 'hurtel' ? 'settings-hurtel-stock-import' : 'settings-fdd-stock-import' }}" type="file" name="file" accept="{{ $supplierKey === 'hurtel' ? '.xml,text/xml' : '.zip,.csv,.txt' }}" class="sr-only" required onchange="this.form.submit()">
+                                                            </label>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             @else

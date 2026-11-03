@@ -12,6 +12,7 @@ use App\Services\ProductStatsIncomingImportService;
 use App\Services\ProductStatsImportService;
 use App\Services\HurtelStockImportService;
 use App\Services\FddStockImportService;
+use App\Services\LogitStockImportService;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
@@ -28,6 +29,7 @@ class ProductStatController extends Controller
         private readonly ProductStatsIncomingImportService $incomingImportService,
         private readonly HurtelStockImportService $hurtelStockImportService,
         private readonly FddStockImportService $fddStockImportService,
+        private readonly LogitStockImportService $logitStockImportService,
     ) {}
 
     public function index(Request $request): View
@@ -279,7 +281,7 @@ class ProductStatController extends Controller
         validator(
             ['supplier' => $supplier, 'stock_feed_url' => $url],
             [
-                'supplier' => ['required', 'string', 'in:Fdd,Hurtel'],
+                'supplier' => ['required', 'string', 'in:Fdd,Hurtel,Logit'],
                 'stock_feed_url' => ['required', 'url', 'max:2000'],
             ],
         )->validate();
@@ -290,7 +292,7 @@ class ProductStatController extends Controller
             $response = Http::timeout(120)->retry(2, 1000)->get($url)->throw();
             $contentType = strtolower((string) $response->header('Content-Type'));
             $urlPath = strtolower((string) parse_url($url, PHP_URL_PATH));
-            $extension = $supplier === 'Hurtel'
+            $extension = in_array($supplier, ['Hurtel', 'Logit'], true)
                 ? 'xml'
                 : (str_ends_with($urlPath, '.zip') || str_contains($contentType, 'zip') ? 'zip' : 'csv');
 
@@ -306,9 +308,11 @@ class ProductStatController extends Controller
                 null,
                 true,
             );
-            $rows = $supplier === 'Hurtel'
-                ? $this->hurtelStockImportService->parse($file)
-                : $this->fddStockImportService->parse($file);
+            $rows = match ($supplier) {
+                'Hurtel' => $this->hurtelStockImportService->parse($file),
+                'Logit' => $this->logitStockImportService->parse($file),
+                default => $this->fddStockImportService->parse($file),
+            };
             $checkedAt = now();
 
             DB::transaction(function () use ($supplier, $url, $rows, $checkedAt): void {
@@ -360,7 +364,7 @@ class ProductStatController extends Controller
     public function clearSupplierStock(Request $request, string $supplier): RedirectResponse
     {
         $this->authorizeAccess($request);
-        abort_unless(in_array($supplier, ['Fdd', 'Hurtel'], true), 404);
+        abort_unless(in_array($supplier, ['Fdd', 'Hurtel', 'Logit'], true), 404);
 
         ProductStatSupplierStock::query()
             ->where('supplier_name', $supplier)
@@ -559,13 +563,19 @@ class ProductStatController extends Controller
                     $supplierSetting = $supplierSettings->get(mb_strtolower($supplier));
                     $targetCoverageDays = (int) ($supplierSetting?->target_coverage_days ?: 45);
                     $supplierEan = $this->extractSupplierCodeForSupplier($item->supplier_raw, $supplier, $item->stock_code, $item->ean);
-                    $supplierMatchCode = $item->supplier_code ?: $supplierEan;
-
                     $groupItem->current_supplier_name = $supplier;
                     $groupItem->current_supplier_stock_code = $supplierEan;
                     $supplierStock = $supplierStocks->get(mb_strtolower($supplier));
+                    $supplierMatchCodes = array_values(array_unique(array_filter([
+                        $item->supplier_code,
+                        $supplierEan,
+                        $item->ean,
+                    ])));
                     $groupItem->current_supplier_stock_status = $supplierStock
-                        ? ($supplierStock->get((string) $supplierMatchCode)?->stock_status ?? 'unknown')
+                        ? (collect($supplierMatchCodes)
+                            ->map(fn ($code) => $supplierStock->get((string) $code)?->stock_status)
+                            ->filter()
+                            ->first() ?? 'unknown')
                         : null;
                     $groupItem->current_supplier_portal_url = $this->buildSupplierPortalUrl($supplierSetting?->portal_url_template, $supplierEan ?: $item->ean);
                     $groupItem->current_supplier_badge = mb_strtoupper(mb_substr($supplier, 0, 2));

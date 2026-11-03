@@ -34,6 +34,7 @@ class SettingsController extends Controller
             ->pluck('supplier_raw')
             ->flatMap(fn ($supplierRaw) => $this->extractSupplierNames($supplierRaw))
             ->merge($supplierSettings->pluck('supplier_name'))
+            ->merge(['Logit'])
             ->filter()
             ->unique()
             ->sort()
@@ -73,6 +74,7 @@ class SettingsController extends Controller
                             || filled($setting?->stock_feed_url)
                             || filled($setting?->incoming_feed_url)
                             || (($stockMeta['count'] ?? 0) > 0)
+                            || $supplierName === 'Logit'
                             || ($supplierName === 'Fdd' && $fddIncomingItems->count() > 0),
                     ];
                 }),

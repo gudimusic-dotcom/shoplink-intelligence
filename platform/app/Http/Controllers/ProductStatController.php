@@ -776,6 +776,9 @@ class ProductStatController extends Controller
             ->chunk(800)
             ->flatMap(fn ($chunk) => SalesOrderLine::query()
                 ->select('model')
+                ->selectRaw("SUM(CASE WHEN ordered_at >= ? AND channel_type = 'own_web' THEN quantity ELSE 0 END) as own_web_30", [$anchor->subDays(29)->startOfDay()->toDateTimeString()])
+                ->selectRaw("SUM(CASE WHEN ordered_at >= ? AND channel_type = 'marketplace' THEN quantity ELSE 0 END) as marketplace_30", [$anchor->subDays(29)->startOfDay()->toDateTimeString()])
+                ->selectRaw("SUM(CASE WHEN ordered_at >= ? AND channel_type = 'marketplace' AND UPPER(COALESCE(marketplace_display, '')) LIKE 'ALZA%' THEN quantity ELSE 0 END) as alza_30", [$anchor->subDays(29)->startOfDay()->toDateTimeString()])
                 ->selectRaw("SUM(CASE WHEN ordered_at >= ? AND channel_type = 'own_web' THEN quantity ELSE 0 END) as own_web_90", [$start90->toDateTimeString()])
                 ->selectRaw("SUM(CASE WHEN ordered_at >= ? AND channel_type = 'marketplace' THEN quantity ELSE 0 END) as marketplace_90", [$start90->toDateTimeString()])
                 ->selectRaw("SUM(CASE WHEN ordered_at >= ? AND channel_type = 'marketplace' AND UPPER(COALESCE(marketplace_display, '')) LIKE 'ALZA%' THEN quantity ELSE 0 END) as alza_90", [$start90->toDateTimeString()])
@@ -802,6 +805,8 @@ class ProductStatController extends Controller
         $rows = $items
             ->map(function (ProductStatItem $item) use ($incomingByEan, $salesBySku, $supplierSettings) {
                 $sales = $salesBySku->get($item->sku);
+                $sales30S2 = (float) ($sales?->alza_30 ?? 0);
+                $sales30S1 = max(0, (float) ($sales?->own_web_30 ?? 0) + (float) ($sales?->marketplace_30 ?? 0) - $sales30S2);
                 $sales90S2 = (float) ($sales?->alza_90 ?? 0);
                 $sales90S1 = max(0, (float) ($sales?->own_web_90 ?? 0) + (float) ($sales?->marketplace_90 ?? 0) - $sales90S2);
                 $sales180S2 = (float) ($sales?->alza_180 ?? 0);
@@ -813,8 +818,9 @@ class ProductStatController extends Controller
                 $salesQ4 = $salesQ4S1 + $salesQ4S2;
                 $incomingQty = (int) ($incomingByEan[$item->ean] ?? 0);
                 $ageDays = (int) ($item->product_age_days ?? 0);
-                $q4ForecastS1 = $ageDays >= 365 ? (int) ceil($salesQ4S1 * 1.15) : 0;
-                $q4ForecastS2 = $ageDays >= 365 ? (int) ceil($salesQ4S2 * 1.15) : 0;
+                $hasHistoricalQ4 = $salesQ4 > 0;
+                $q4ForecastS1 = $hasHistoricalQ4 ? (int) ceil($salesQ4S1 * 1.15) : (int) ceil($sales30S1 * 3);
+                $q4ForecastS2 = $hasHistoricalQ4 ? (int) ceil($salesQ4S2 * 1.15) : (int) ceil($sales30S2 * 3);
                 $forecastS1 = max((int) ceil(($sales90S1 / 90) * 120), $q4ForecastS1);
                 $forecastS2 = max((int) ceil(($sales90S2 / 90) * 120), $q4ForecastS2);
                 $recommendedS1 = max(0, $forecastS1 - (int) $item->stock_s1 - $incomingQty);

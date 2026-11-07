@@ -73,7 +73,7 @@
                         </colgroup>
                         <thead class="bg-slate-100 text-xs uppercase tracking-[0.14em] text-slate-700">
                             <tr>
-                                <th class="px-4 py-2 text-left">Produkt</th><th class="px-3 py-2 text-left">SKU</th><th class="px-3 py-2 text-left">Dodávateľ</th><th class="px-2 py-2 text-center">S1</th><th class="px-2 py-2 text-center">S2</th><th class="px-2 py-2 text-center">Cesta</th><th class="px-2 py-2 text-center">S90<br>S1 / Alza</th><th class="px-2 py-2 text-center">S180<br>S1 / Alza</th><th class="px-2 py-2 text-center">Q4 plán<br>S1 / Alza</th><th class="px-2 py-2 text-center">Dni</th><th class="px-2 py-2 text-center">Forecast<br>S1 / S2</th><th class="px-2 py-2 text-center">Obj.<br>S1 / S2</th><th class="px-2 py-2 text-center">Last</th><th class="px-3 py-2 text-left">Dôvod</th>
+                                <th class="px-4 py-2 text-left">Produkt</th><th class="px-3 py-2 text-left">SKU</th><th class="px-3 py-2 text-left">Dodávateľ</th><th class="px-2 py-2 text-center">S1</th><th class="px-2 py-2 text-center">S2</th><th class="px-2 py-2 text-center">Cesta</th><th class="whitespace-nowrap px-2 py-2 text-center">S90 S1 / Alza</th><th class="whitespace-nowrap px-2 py-2 text-center">S180 S1 / Alza</th><th class="whitespace-nowrap px-2 py-2 text-center">Q4 plán S1 / Alza</th><th class="px-2 py-2 text-center">Dni</th><th class="whitespace-nowrap px-2 py-2 text-center">Forecast S1 / S2</th><th class="whitespace-nowrap px-2 py-2 text-center">Obj. S1 / S2</th><th class="px-2 py-2 text-center">Last</th><th class="px-3 py-2 text-left">Dôvod</th>
                             </tr>
                         </thead>
                         <tbody>

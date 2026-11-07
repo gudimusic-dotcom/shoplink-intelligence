@@ -73,7 +73,7 @@
                         </colgroup>
                         <thead class="bg-slate-100 text-xs uppercase tracking-[0.14em] text-slate-700">
                             <tr>
-                                <th class="px-4 py-2 text-left">Produkt</th><th class="px-3 py-2 text-left">SKU</th><th class="px-3 py-2 text-left">Dodávateľ</th><th class="px-2 py-2 text-center">S1</th><th class="px-2 py-2 text-center">S2</th><th class="px-2 py-2 text-center">Cesta</th><th class="px-2 py-2 text-center">S90<br>S1 / Alza</th><th class="px-2 py-2 text-center">S180<br>S1 / Alza</th><th class="px-2 py-2 text-center">Q4<br>S1 / Alza</th><th class="px-2 py-2 text-center">Dni</th><th class="px-2 py-2 text-center">Forecast<br>S1 / S2</th><th class="px-2 py-2 text-center">Obj.<br>S1 / S2</th><th class="px-2 py-2 text-center">Last</th><th class="px-3 py-2 text-left">Dôvod</th>
+                                <th class="px-4 py-2 text-left">Produkt</th><th class="px-3 py-2 text-left">SKU</th><th class="px-3 py-2 text-left">Dodávateľ</th><th class="px-2 py-2 text-center">S1</th><th class="px-2 py-2 text-center">S2</th><th class="px-2 py-2 text-center">Cesta</th><th class="px-2 py-2 text-center">S90<br>S1 / Alza</th><th class="px-2 py-2 text-center">S180<br>S1 / Alza</th><th class="px-2 py-2 text-center">Q4 plán<br>S1 / Alza</th><th class="px-2 py-2 text-center">Dni</th><th class="px-2 py-2 text-center">Forecast<br>S1 / S2</th><th class="px-2 py-2 text-center">Obj.<br>S1 / S2</th><th class="px-2 py-2 text-center">Last</th><th class="px-3 py-2 text-left">Dôvod</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -85,7 +85,7 @@
                                     <td class="px-2 py-2 text-center {{ $row['stock_s1'] <= 0 ? 'font-semibold text-red-600' : '' }}">{{ $row['stock_s1'] }}</td><td class="px-2 py-2 text-center">{{ $row['stock_s2'] }}</td><td class="px-2 py-2 text-center">{{ $row['incoming_qty'] }}</td>
                                     <td class="px-2 py-2 text-center text-xs leading-5 font-semibold text-blue-600"><span class="block">{{ $row['sales_90_s1'] }}</span><span class="block text-amber-600">{{ $row['sales_90_s2'] }}</span></td>
                                     <td class="px-2 py-2 text-center text-xs leading-5"><span class="block">{{ $row['sales_180_s1'] }}</span><span class="block text-amber-600">{{ $row['sales_180_s2'] }}</span></td>
-                                    <td class="px-2 py-2 text-center text-xs leading-5 font-semibold text-amber-600"><span class="block">{{ $row['sales_q4_s1'] }}</span><span class="block text-rose-600">{{ $row['sales_q4_s2'] }}</span></td>
+                                    <td class="px-2 py-2 text-center text-xs leading-5 font-semibold text-amber-600"><span class="block">{{ $row['q4_plan_s1'] }}</span><span class="block text-rose-600">{{ $row['q4_plan_s2'] }}</span></td>
                                     <td class="px-2 py-2 text-center">{{ $row['product_age_days'] ?: '---' }}</td>
                                     <td class="px-2 py-2 text-center text-xs leading-5 font-semibold"><span class="block">{{ $row['forecast_s1'] }}</span><span class="block text-amber-600">{{ $row['forecast_s2'] }}</span></td>
                                     <td class="px-2 py-2 text-center text-xs leading-5 font-bold text-rose-600"><span class="block">{{ $row['recommended_s1'] }}</span><span class="block text-amber-600">{{ $row['recommended_s2'] }}</span></td>

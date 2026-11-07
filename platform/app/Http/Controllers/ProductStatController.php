@@ -861,6 +861,8 @@ class ProductStatController extends Controller
                     'sales_q4' => (int) round($salesQ4),
                     'sales_q4_s1' => (int) round($salesQ4S1),
                     'sales_q4_s2' => (int) round($salesQ4S2),
+                    'q4_plan_s1' => $q4ForecastS1,
+                    'q4_plan_s2' => $q4ForecastS2,
                     'product_age_days' => $ageDays,
                     'forecast' => $forecast,
                     'recommended' => $recommended,

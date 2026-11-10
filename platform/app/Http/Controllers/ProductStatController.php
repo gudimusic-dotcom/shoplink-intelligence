@@ -693,6 +693,31 @@ class ProductStatController extends Controller
             ->sortByDesc('urgency_score')
             ->values();
 
+        $lastSalesAt = SalesOrderLine::query()->max('ordered_at');
+        $salesPeriodTo = $lastSalesAt ? CarbonImmutable::parse($lastSalesAt)->endOfDay() : null;
+        $salesPeriodFrom = $salesPeriodTo?->subDays(29)->startOfDay();
+        $salesOverview = [
+            'from' => $salesPeriodFrom,
+            'to' => $salesPeriodTo,
+            'total_units' => 0,
+            'total_orders' => 0,
+            'alza_units' => 0,
+            'alza_orders' => 0,
+            'stock_s1' => (int) $items->sum('stock_s1'),
+            'stock_s2' => (int) $items->sum('stock_s2'),
+        ];
+
+        if ($salesPeriodFrom && $salesPeriodTo) {
+            $salesOverviewQuery = SalesOrderLine::query()
+                ->whereBetween('ordered_at', [$salesPeriodFrom, $salesPeriodTo]);
+            $salesOverview['total_units'] = (int) round((float) (clone $salesOverviewQuery)->sum('quantity'));
+            $salesOverview['total_orders'] = (clone $salesOverviewQuery)->distinct('order_code')->count('order_code');
+            $alzaSalesQuery = (clone $salesOverviewQuery)
+                ->whereRaw("UPPER(COALESCE(marketplace_display, '')) LIKE 'ALZA%'");
+            $salesOverview['alza_units'] = (int) round((float) $alzaSalesQuery->sum('quantity'));
+            $salesOverview['alza_orders'] = (clone $alzaSalesQuery)->distinct('order_code')->count('order_code');
+        }
+
         return [
             'latestImport' => $latestImport,
             'supplierGroups' => $supplierGroups,
@@ -719,6 +744,7 @@ class ProductStatController extends Controller
             'hurtelStockCount' => $hurtelStocks->count(),
             'hurtelStockCheckedAt' => $hurtelStocks->max('checked_at'),
             'fddIncomingUnits' => $fddIncomingUnits,
+            'salesOverview' => $salesOverview,
         ];
     }
 

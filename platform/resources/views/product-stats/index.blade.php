@@ -140,6 +140,40 @@
         </section>
 
         <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Predaj a sklad</p>
+                    <h2 class="mt-1 text-xl font-semibold text-slate-900">Posledných 30 dní</h2>
+                    @if ($salesOverview['from'] && $salesOverview['to'])
+                        <p class="mt-1 text-sm text-slate-500">{{ $salesOverview['from']->format('d.m.Y') }} – {{ $salesOverview['to']->format('d.m.Y') }}</p>
+                    @else
+                        <p class="mt-1 text-sm text-slate-500">Zatiaľ nie sú importované predajné dáta.</p>
+                    @endif
+                </div>
+                <div class="grid min-w-[min(100%,620px)] flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div class="rounded-2xl bg-slate-50 px-4 py-3">
+                        <p class="text-xs font-medium text-slate-500">Všetky ks</p>
+                        <strong class="mt-1 block text-xl font-semibold text-slate-900">{{ number_format($salesOverview['total_units'], 0, ',', ' ') }}</strong>
+                        <span class="text-xs text-slate-500">{{ number_format($salesOverview['total_orders'], 0, ',', ' ') }} objednávok</span>
+                    </div>
+                    <div class="rounded-2xl bg-amber-50 px-4 py-3">
+                        <p class="text-xs font-medium text-amber-700">Alza</p>
+                        <strong class="mt-1 block text-xl font-semibold text-slate-900">{{ number_format($salesOverview['alza_units'], 0, ',', ' ') }}</strong>
+                        <span class="text-xs text-slate-500">{{ number_format($salesOverview['alza_orders'], 0, ',', ' ') }} objednávok</span>
+                    </div>
+                    <div class="rounded-2xl bg-blue-50 px-4 py-3">
+                        <p class="text-xs font-medium text-blue-700">S1 sklad</p>
+                        <strong class="mt-1 block text-xl font-semibold text-slate-900">{{ number_format($salesOverview['stock_s1'], 0, ',', ' ') }} ks</strong>
+                    </div>
+                    <div class="rounded-2xl bg-indigo-50 px-4 py-3">
+                        <p class="text-xs font-medium text-indigo-700">S2 sklad</p>
+                        <strong class="mt-1 block text-xl font-semibold text-slate-900">{{ number_format($salesOverview['stock_s2'], 0, ',', ' ') }} ks</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <form method="GET" action="{{ route('product-stats.index') }}" class="space-y-3">
                 <div style="display:grid;grid-template-columns:minmax(0,1.35fr) minmax(180px,0.82fr) minmax(180px,0.82fr) minmax(150px,0.55fr) minmax(120px,0.45fr) minmax(90px,0.28fr) minmax(90px,0.28fr);gap:12px;align-items:end;">
                     <div class="min-w-0">

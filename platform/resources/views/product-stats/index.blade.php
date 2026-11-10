@@ -329,7 +329,7 @@
                             <input type="hidden" name="stock_value" value="{{ $stockValue }}">
                     @endif
                     <div class="product-stats-table-wrap">
-                            <table class="product-stats-table table-fixed text-sm" style="min-width:1600px;">
+                            <table class="product-stats-table table-fixed text-sm" style="min-width:1644px;">
                             <colgroup>
                                 <col style="width: 520px;">
                                 <col style="width: 110px;">
@@ -340,6 +340,7 @@
                                 <col style="width: 40px;">
                                 <col style="width: 40px;">
                                 <col style="width: 56px;">
+                                <col style="width: 44px;">
                                 <col style="width: 44px;">
                                 <col style="width: 44px;">
                                 <col style="width: 44px;">
@@ -365,6 +366,7 @@
                                     <th class="px-0.5 py-3 text-teal-600" style="width:44px;">T30</th>
                                     <th class="px-0.5 py-3 text-blue-600" style="width:44px;">P30</th>
                                     <th class="px-0.5 py-3 text-amber-600" style="width:44px;">Alz</th>
+                                    <th class="px-0.5 py-3 text-orange-600" style="width:44px;">Alz T30</th>
                                     <th class="px-0.5 py-3 text-red-600" style="width:44px;">POP</th>
                                     <th class="px-1 py-3" style="width:52px;">S1 dni</th>
                                     <th class="px-2 py-3" style="width:68px;">NC</th>
@@ -441,6 +443,7 @@
                                         <td class="px-0.5 py-3 text-center font-semibold text-teal-600">{{ $item->trend_t30 ?? '---' }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-blue-600">{{ $item->sales_p30 }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-amber-600">{{ $item->market_alza }}</td>
+                                        <td class="px-0.5 py-3 text-center font-semibold text-orange-600">{{ $item->alza_t30 }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-red-600">{{ $item->sales_pop }}</td>
                                         <td class="px-1 py-3 text-center">{{ $item->s1_coverage_days !== null ? number_format(round($item->s1_coverage_days), 0, ',', ' ') : '---' }}</td>
                                         <td class="px-2 py-3 text-center">{{ number_format((float) $item->purchase_cost, 2, ',', ' ') }}</td>

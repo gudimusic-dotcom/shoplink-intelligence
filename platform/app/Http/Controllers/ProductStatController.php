@@ -485,11 +485,24 @@ class ProductStatController extends Controller
             ->orderByDesc('sales_p30')
             ->orderBy('product_name')
             ->get();
+        $lastSalesAt = SalesOrderLine::query()->max('ordered_at');
+        $alzaT30BySku = collect();
+        if ($lastSalesAt) {
+            $salesPeriodTo = CarbonImmutable::parse($lastSalesAt)->endOfDay();
+            $salesPeriodFrom = $salesPeriodTo->subDays(29)->startOfDay();
+            $alzaT30BySku = SalesOrderLine::query()
+                ->select('model')
+                ->selectRaw('SUM(quantity) as alza_t30')
+                ->whereBetween('ordered_at', [$salesPeriodFrom, $salesPeriodTo])
+                ->whereRaw("UPPER(COALESCE(marketplace_display, '')) LIKE 'ALZA%'")
+                ->groupBy('model')
+                ->pluck('alza_t30', 'model');
+        }
         $periodDays = $latestImport?->period_from && $latestImport?->period_to
             ? max(1, $latestImport->period_from->diffInDays($latestImport->period_to) + 1)
             : null;
 
-        $enrichedItems = $items->map(function (ProductStatItem $item) use ($incomingByEan, $periodDays) {
+        $enrichedItems = $items->map(function (ProductStatItem $item) use ($incomingByEan, $periodDays, $alzaT30BySku) {
             $incomingQty = (int) ($incomingByEan[$item->ean] ?? 0);
             $targetCoverageDays = 45;
             $dailySales = $item->sales_p30 > 0 ? round($item->sales_p30 / 30, 2) : 0.0;
@@ -515,6 +528,7 @@ class ProductStatController extends Controller
             $item->s1_coverage_days = $s1CoverageDays;
             $item->total_coverage_days = $totalCoverageDays;
             $item->alza_ready_stock = $alzaReadyStock;
+            $item->alza_t30 = (int) round((float) ($alzaT30BySku[$item->sku] ?? 0));
             $item->recommended_s1_order = $recommendedS1;
             $item->status_meta = $status;
             $item->supplier_names = $this->extractSupplierNames($item->supplier_raw);

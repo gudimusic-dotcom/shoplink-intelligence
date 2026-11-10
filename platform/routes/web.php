@@ -88,6 +88,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/product-stats', [ProductStatController::class, 'index'])->name('product-stats.index');
     Route::get('/product-stats/preparation', [ProductStatController::class, 'preparation'])->name('product-stats.preparation');
+    Route::get('/product-stats/s2-preparation', [ProductStatController::class, 's2Preparation'])->name('product-stats.s2-preparation');
     Route::post('/product-stats/import', [ProductStatController::class, 'import'])->name('product-stats.import');
     Route::post('/product-stats/import-hurtel-stock', [ProductStatController::class, 'importHurtelStock'])->name('product-stats.import-hurtel-stock');
     Route::post('/product-stats/import-fdd-stock', [ProductStatController::class, 'importFddStock'])->name('product-stats.import-fdd-stock');
@@ -97,6 +98,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/product-stats/import-fdd-incoming', [ProductStatController::class, 'clearFddIncoming'])->name('product-stats.clear-fdd-incoming');
     Route::delete('/product-stats/supplier-stock/{supplier}', [ProductStatController::class, 'clearSupplierStock'])->name('product-stats.clear-supplier-stock');
     Route::post('/product-stats/export-csv', [ProductStatController::class, 'exportCsv'])->name('product-stats.export-csv');
+    Route::post('/product-stats/export-s2-csv', [ProductStatController::class, 'exportS2Csv'])->name('product-stats.export-s2-csv');
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::patch('/settings/rates', [SettingsController::class, 'updateRates'])->name('settings.rates.update');

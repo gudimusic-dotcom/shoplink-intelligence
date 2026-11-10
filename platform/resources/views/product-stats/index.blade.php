@@ -74,7 +74,7 @@
                     <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                         <div>
                             <p class="sl-kicker">Admin module</p>
-                            <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-50">Product Stats</h1>
+                            <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-50">{{ $s2Preparation ? 'S2 / Alza príprava' : 'Product Stats' }}</h1>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="sl-pill">Produkty <strong class="text-slate-50">{{ $stats['products'] }}</strong></span>
@@ -82,6 +82,11 @@
                             <span class="sl-pill">P30 <strong class="text-slate-50">{{ $stats['sales_p30'] }}</strong></span>
                             <span class="sl-pill">Výpredaj <strong class="text-slate-50">{{ $stats['clearance'] }}</strong></span>
                             <a href="{{ route('product-stats.preparation') }}" class="sl-btn-secondary !px-3 !py-2">Príprava</a>
+                            @if (!$s2Preparation)
+                                <a href="{{ route('product-stats.s2-preparation') }}" class="sl-btn-secondary !px-3 !py-2">S2 / Alza</a>
+                            @else
+                                <a href="{{ route('product-stats.index') }}" class="sl-btn-secondary !px-3 !py-2">Product Stats</a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -140,7 +145,7 @@
         </section>
 
         <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <form method="GET" action="{{ route('product-stats.index') }}" class="space-y-3">
+            <form method="GET" action="{{ route($s2Preparation ? 'product-stats.s2-preparation' : 'product-stats.index') }}" class="space-y-3">
                 <div style="display:grid;grid-template-columns:minmax(0,1.35fr) minmax(180px,0.82fr) minmax(180px,0.82fr) minmax(150px,0.55fr) minmax(120px,0.45fr) minmax(90px,0.28fr) minmax(90px,0.28fr);gap:12px;align-items:end;">
                     <div class="min-w-0">
                         <label class="sl-form-label" style="color:#0f172a;">Hľadať</label>
@@ -206,7 +211,7 @@
                         <span>TOP 20</span>
                     </label>
                     <button type="submit" class="sl-btn-primary">Filtrovať</button>
-                    <a href="{{ route('product-stats.index') }}" class="sl-btn-secondary">Reset</a>
+                    <a href="{{ route($s2Preparation ? 'product-stats.s2-preparation' : 'product-stats.index') }}" class="sl-btn-secondary">Reset</a>
                     <button type="button" data-product-stats-continue class="sl-btn-secondary hidden">Pokračovať</button>
                 </div>
             </form>
@@ -319,7 +324,7 @@
                         </div>
                     </div>
                     @if ($isSelectedSupplier)
-                        <form method="POST" action="{{ route('product-stats.export-csv') }}" class="py-1" id="supplier-export-{{ \Illuminate\Support\Str::slug($group['supplier']) }}">
+                        <form method="POST" action="{{ route($s2Preparation ? 'product-stats.export-s2-csv' : 'product-stats.export-csv') }}" class="py-1" id="supplier-export-{{ \Illuminate\Support\Str::slug($group['supplier']) }}">
                             @csrf
                             <input type="hidden" name="supplier" value="{{ $supplierFilter }}">
                             <input type="hidden" name="q" value="{{ $search }}">
@@ -329,7 +334,7 @@
                             <input type="hidden" name="stock_value" value="{{ $stockValue }}">
                     @endif
                     <div class="product-stats-table-wrap">
-                            <table class="product-stats-table table-fixed text-sm" style="min-width:1644px;">
+                            <table class="product-stats-table table-fixed text-sm" style="min-width:{{ $s2Preparation ? '1688px' : '1644px' }};">
                             <colgroup>
                                 <col style="width: 520px;">
                                 <col style="width: 110px;">
@@ -345,6 +350,9 @@
                                 <col style="width: 44px;">
                                 <col style="width: 44px;">
                                 <col style="width: 44px;">
+                                @if ($s2Preparation)
+                                    <col style="width: 44px;">
+                                @endif
                                 <col style="width: 44px;">
                                 <col style="width: 52px;">
                                 <col style="width: 68px;">
@@ -361,12 +369,15 @@
                                     <th class="px-0.5 py-3" style="width:40px;">S1</th>
                                     <th class="px-0.5 py-3 text-center" style="width:40px;" title="Na ceste">✈</th>
                                     <th class="px-0.5 py-3" style="width:40px;">S2</th>
-                                    <th class="px-1 py-3" style="width:56px;background:#e11d48;color:#fff;">OBJ</th>
+                                    <th class="px-1 py-3" style="width:56px;background:#e11d48;color:#fff;">{{ $s2Preparation ? 'FDD S2' : 'OBJ' }}</th>
                                     <th class="px-0.5 py-3 text-emerald-600" style="width:44px;">Pre</th>
                                     <th class="px-0.5 py-3 text-teal-600" style="width:44px;">T30</th>
                                     <th class="px-0.5 py-3 text-blue-600" style="width:44px;">P30</th>
                                     <th class="px-0.5 py-3 text-amber-600" style="width:44px;">Alz</th>
                                     <th class="px-0.5 py-3 text-orange-600" style="width:44px;">Alz T30</th>
+                                    @if ($s2Preparation)
+                                        <th class="px-0.5 py-3 text-orange-600" style="width:44px;">Presun</th>
+                                    @endif
                                     <th class="px-0.5 py-3 text-red-600" style="width:44px;">POP</th>
                                     <th class="px-1 py-3" style="width:52px;">S1 dni</th>
                                     <th class="px-2 py-3" style="width:68px;">NC</th>
@@ -444,6 +455,9 @@
                                         <td class="px-0.5 py-3 text-center font-semibold text-blue-600">{{ $item->sales_p30 }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-amber-600">{{ $item->market_alza }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-orange-600">{{ $item->alza_t30 }}</td>
+                                        @if ($s2Preparation)
+                                            <td class="px-0.5 py-3 text-center font-semibold text-orange-600">{{ $item->s2_transfer_qty }}</td>
+                                        @endif
                                         <td class="px-0.5 py-3 text-center font-semibold text-red-600">{{ $item->sales_pop }}</td>
                                         <td class="px-1 py-3 text-center">{{ $item->s1_coverage_days !== null ? number_format(round($item->s1_coverage_days), 0, ',', ' ') : '---' }}</td>
                                         <td class="px-2 py-3 text-center">{{ number_format((float) $item->purchase_cost, 2, ',', ' ') }}</td>

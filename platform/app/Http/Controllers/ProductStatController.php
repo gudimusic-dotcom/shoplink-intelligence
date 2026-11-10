@@ -61,6 +61,25 @@ class ProductStatController extends Controller
         return view('product-stats.preparation', $this->buildPreparationPayload($filters));
     }
 
+    public function s2Preparation(Request $request): View
+    {
+        $this->authorizeAccess($request);
+
+        $filters = $request->validate([
+            'supplier' => ['nullable', 'string', 'max:255'],
+            'supplier_stock' => ['nullable', 'string', 'in:all,in_stock,out_of_stock,unknown'],
+            'status' => ['nullable', 'string', 'in:all,order,watch,stock,clearance,lost_sales,price_check'],
+            'q' => ['nullable', 'string', 'max:255'],
+            'stock_field' => ['nullable', 'string', 'in:s1,s2'],
+            'stock_operator' => ['nullable', 'string', 'in:<,<=,=,>=,>'],
+            'stock_value' => ['nullable', 'integer', 'min:0'],
+            'priority' => ['nullable', 'string', 'in:0,1'],
+        ]);
+        $filters['supplier'] = $filters['supplier'] ?? 'Fdd';
+
+        return view('product-stats.index', $this->buildS2PreparationPayload($request, $filters));
+    }
+
     public function import(Request $request): RedirectResponse
     {
         $this->authorizeAccess($request);
@@ -420,6 +439,50 @@ class ProductStatController extends Controller
         ]);
     }
 
+    public function exportS2Csv(Request $request): Response
+    {
+        $this->authorizeAccess($request);
+
+        $validated = $request->validate([
+            'supplier' => ['required', 'string', 'max:255'],
+            'q' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'string', 'in:all,order,watch,stock,clearance,lost_sales,price_check'],
+            'stock_field' => ['nullable', 'string', 'in:s1,s2'],
+            'stock_operator' => ['nullable', 'string', 'in:<,<=,=,>=,>'],
+            'stock_value' => ['nullable', 'integer', 'min:0'],
+            'quantities' => ['nullable', 'array'],
+            'quantities.*' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $payload = $this->buildS2PreparationPayload($request, $validated);
+        $group = $payload['supplierGroups']->firstWhere('supplier', $validated['supplier']);
+
+        abort_unless($group, 404);
+
+        $rows = collect($group['items'])
+            ->map(function ($item) use ($validated) {
+                $qty = (int) ($validated['quantities'][$item->sku] ?? 0);
+
+                return [
+                    'code' => (string) ($item->ean ?? ''),
+                    'qty' => $qty,
+                ];
+            })
+            ->unique(fn ($row) => $row['code'].'|'.$row['qty'])
+            ->filter(fn ($row) => $row['code'] !== '' && $row['qty'] > 0)
+            ->values();
+
+        $filename = 'product-order-s2-'.str($validated['supplier'])->slug('-').'-'.now()->format('Ymd-His').'.csv';
+        $content = $rows->prepend(['code' => 'SkladovyKod', 'qty' => 'qty'])
+            ->map(fn ($row) => $row['code'].','.$row['qty'])
+            ->implode("\n");
+
+        return response($content, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
+    }
+
     private function buildIndexPayload(Request $request, array $filters): array
     {
         $latestImport = ProductStatImport::query()
@@ -733,7 +796,54 @@ class ProductStatController extends Controller
             'hurtelStockCount' => $hurtelStocks->count(),
             'hurtelStockCheckedAt' => $hurtelStocks->max('checked_at'),
             'fddIncomingUnits' => $fddIncomingUnits,
+            's2Preparation' => false,
         ];
+    }
+
+    private function buildS2PreparationPayload(Request $request, array $filters): array
+    {
+        $payload = $this->buildIndexPayload($request, $filters);
+
+        $payload['supplierGroups'] = $payload['supplierGroups']
+            ->map(function (array $group): array {
+                $items = collect($group['items'])
+                    ->map(function (ProductStatItem $item): ProductStatItem {
+                        $targetDays = max(1, (int) ($item->target_coverage_days ?? 45));
+                        $alzaT30 = (int) ($item->alza_t30 ?? 0);
+                        $totalT30 = max(0, (int) ($item->trend_t30 ?? 0));
+                        $otherT30 = max(0, $totalT30 - $alzaT30);
+                        $s1SafetyStock = (int) ceil(($otherT30 / 30) * $targetDays);
+                        $s2TargetStock = (int) ceil(($alzaT30 / 30) * $targetDays);
+                        $s1Surplus = max(0, (int) $item->stock_s1 - $s1SafetyStock);
+                        $s2Shortage = max(0, $s2TargetStock - (int) $item->stock_s2);
+                        $transfer = min($s1Surplus, $s2Shortage);
+                        $fddOrder = max(0, $s2Shortage - $transfer);
+
+                        $item->s2_total_t30 = $totalT30;
+                        $item->s2_other_t30 = $otherT30;
+                        $item->s1_safety_stock = $s1SafetyStock;
+                        $item->s2_target_stock = $s2TargetStock;
+                        $item->s2_transfer_qty = $transfer;
+                        $item->fdd_s2_order_qty = $fddOrder;
+                        $item->recommended_s1_order = $fddOrder;
+
+                        return $item;
+                    })
+                    ->filter(fn (ProductStatItem $item) => $item->s2_transfer_qty > 0 || $item->fdd_s2_order_qty > 0)
+                    ->values();
+
+                $group['items'] = $items;
+                $group['count'] = $items->count();
+
+                return $group;
+            })
+            ->filter(fn (array $group) => $group['count'] > 0)
+            ->values();
+        $payload['s2Preparation'] = true;
+        $payload['stats']['products'] = $payload['supplierGroups']->sum('count');
+        $payload['stats']['suppliers'] = $payload['supplierGroups']->count();
+
+        return $payload;
     }
 
     private function authorizeAccess(Request $request): void

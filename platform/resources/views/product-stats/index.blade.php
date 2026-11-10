@@ -140,40 +140,6 @@
         </section>
 
         <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Predaj a sklad</p>
-                    <h2 class="mt-1 text-xl font-semibold text-slate-900">Posledných 30 dní</h2>
-                    @if ($salesOverview['from'] && $salesOverview['to'])
-                        <p class="mt-1 text-sm text-slate-500">{{ $salesOverview['from']->format('d.m.Y') }} – {{ $salesOverview['to']->format('d.m.Y') }}</p>
-                    @else
-                        <p class="mt-1 text-sm text-slate-500">Zatiaľ nie sú importované predajné dáta.</p>
-                    @endif
-                </div>
-                <div class="grid min-w-[min(100%,620px)] flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
-                    <div class="rounded-2xl bg-slate-50 px-4 py-3">
-                        <p class="text-xs font-medium text-slate-500">Všetky ks</p>
-                        <strong class="mt-1 block text-xl font-semibold text-slate-900">{{ number_format($salesOverview['total_units'], 0, ',', ' ') }}</strong>
-                        <span class="text-xs text-slate-500">{{ number_format($salesOverview['total_orders'], 0, ',', ' ') }} objednávok</span>
-                    </div>
-                    <div class="rounded-2xl bg-amber-50 px-4 py-3">
-                        <p class="text-xs font-medium text-amber-700">Alza</p>
-                        <strong class="mt-1 block text-xl font-semibold text-slate-900">{{ number_format($salesOverview['alza_units'], 0, ',', ' ') }}</strong>
-                        <span class="text-xs text-slate-500">{{ number_format($salesOverview['alza_orders'], 0, ',', ' ') }} objednávok</span>
-                    </div>
-                    <div class="rounded-2xl bg-blue-50 px-4 py-3">
-                        <p class="text-xs font-medium text-blue-700">S1 sklad</p>
-                        <strong class="mt-1 block text-xl font-semibold text-slate-900">{{ number_format($salesOverview['stock_s1'], 0, ',', ' ') }} ks</strong>
-                    </div>
-                    <div class="rounded-2xl bg-indigo-50 px-4 py-3">
-                        <p class="text-xs font-medium text-indigo-700">S2 sklad</p>
-                        <strong class="mt-1 block text-xl font-semibold text-slate-900">{{ number_format($salesOverview['stock_s2'], 0, ',', ' ') }} ks</strong>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <form method="GET" action="{{ route('product-stats.index') }}" class="space-y-3">
                 <div style="display:grid;grid-template-columns:minmax(0,1.35fr) minmax(180px,0.82fr) minmax(180px,0.82fr) minmax(150px,0.55fr) minmax(120px,0.45fr) minmax(90px,0.28fr) minmax(90px,0.28fr);gap:12px;align-items:end;">
                     <div class="min-w-0">
@@ -363,7 +329,7 @@
                             <input type="hidden" name="stock_value" value="{{ $stockValue }}">
                     @endif
                     <div class="product-stats-table-wrap">
-                        <table class="product-stats-table table-fixed text-sm" style="min-width:1556px;">
+                            <table class="product-stats-table table-fixed text-sm" style="min-width:1600px;">
                             <colgroup>
                                 <col style="width: 520px;">
                                 <col style="width: 110px;">
@@ -374,6 +340,7 @@
                                 <col style="width: 40px;">
                                 <col style="width: 40px;">
                                 <col style="width: 56px;">
+                                <col style="width: 44px;">
                                 <col style="width: 44px;">
                                 <col style="width: 44px;">
                                 <col style="width: 44px;">
@@ -397,6 +364,7 @@
                                     <th class="px-0.5 py-3 text-emerald-600" style="width:44px;">Pre</th>
                                     <th class="px-0.5 py-3 text-teal-600" style="width:44px;">T30</th>
                                     <th class="px-0.5 py-3 text-blue-600" style="width:44px;">P30</th>
+                                    <th class="px-0.5 py-3 text-amber-600" style="width:44px;">Alz</th>
                                     <th class="px-0.5 py-3 text-red-600" style="width:44px;">POP</th>
                                     <th class="px-1 py-3" style="width:52px;">S1 dni</th>
                                     <th class="px-2 py-3" style="width:68px;">NC</th>
@@ -472,6 +440,7 @@
                                         <td class="px-0.5 py-3 text-center font-semibold text-emerald-600">{{ $item->sales_period }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-teal-600">{{ $item->trend_t30 ?? '---' }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-blue-600">{{ $item->sales_p30 }}</td>
+                                        <td class="px-0.5 py-3 text-center font-semibold text-amber-600">{{ $item->market_alza }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-red-600">{{ $item->sales_pop }}</td>
                                         <td class="px-1 py-3 text-center">{{ $item->s1_coverage_days !== null ? number_format(round($item->s1_coverage_days), 0, ',', ' ') : '---' }}</td>
                                         <td class="px-2 py-3 text-center">{{ number_format((float) $item->purchase_cost, 2, ',', ' ') }}</td>

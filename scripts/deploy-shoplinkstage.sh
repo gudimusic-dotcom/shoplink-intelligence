@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+APP_DIR="$ROOT_DIR/platform"
 cd "$ROOT_DIR"
 
 SSH_KEY="${SHOPLINK_STAGE_SSH_KEY:-$HOME/.ssh/rma_websupport_ed25519}"
@@ -23,9 +24,9 @@ done
 echo "== Local status =="
 git status --short --branch
 
-RSYNC_MODE=()
+RSYNC_MODE=(-az)
 if [[ "$DRY_RUN" -eq 1 ]]; then
-  RSYNC_MODE=(--dry-run)
+  RSYNC_MODE+=(--dry-run)
 else
   BACKUP_NAME="shoplinkstage-$(date '+%Y%m%d-%H%M%S').tar.gz"
   echo "== Backup current shoplinkstage =="
@@ -50,10 +51,11 @@ echo "== Upload to shoplinkstage =="
 rsync -az "${RSYNC_MODE[@]}" \
   -e "ssh -i $SSH_KEY -p $SSH_PORT" \
   --exclude '.git/' --exclude '.env' --exclude '.DS_Store' --exclude '._*' \
+  --exclude 'database/*.sqlite*' \
   --exclude 'node_modules/' --exclude 'vendor/' --exclude 'public/build/' \
   --exclude 'storage/framework/cache/' --exclude 'storage/framework/sessions/' \
   --exclude 'storage/framework/views/' --exclude 'storage/logs/' \
-  ./ "$SSH_USER_HOST:$REMOTE_DIR/"
+  "$APP_DIR/" "$SSH_USER_HOST:$REMOTE_DIR/"
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
   echo "Dry run only. No remote cache cleared."

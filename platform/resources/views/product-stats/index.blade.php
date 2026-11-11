@@ -3,8 +3,6 @@
         .product-stats-table-wrap {
             overflow-x: auto;
             overflow-y: visible;
-            content-visibility: auto;
-            contain-intrinsic-size: 0 900px;
         }
 
         .product-stats-table th {

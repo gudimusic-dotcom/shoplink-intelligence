@@ -1,8 +1,7 @@
 <x-app-layout>
     <style>
         .product-stats-table-wrap {
-            overflow-x: auto;
-            overflow-y: clip;
+            overflow: visible;
         }
 
         .product-stats-table th {

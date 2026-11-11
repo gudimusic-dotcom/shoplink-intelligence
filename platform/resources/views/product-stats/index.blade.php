@@ -2,7 +2,7 @@
     <style>
         .product-stats-table-wrap {
             overflow-x: auto;
-            overflow-y: visible;
+            overflow-y: clip;
         }
 
         .product-stats-table th {

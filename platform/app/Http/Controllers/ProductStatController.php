@@ -571,10 +571,12 @@ class ProductStatController extends Controller
             : null;
 
         $enrichedItems = $items->map(function (ProductStatItem $item) use ($incomingByEan, $periodDays, $alzaT30BySku, $salesChannel) {
+            $alzaT30 = (int) round((float) ($alzaT30BySku[$item->sku] ?? 0));
+
             if ($salesChannel === 'alza') {
-                $item->sales_p30 = (int) $item->market_alza;
+                $item->sales_p30 = $alzaT30;
             } elseif ($salesChannel === 'non_alza') {
-                $item->sales_p30 = max(0, (int) $item->sales_p30 - (int) $item->market_alza);
+                $item->sales_p30 = max(0, (int) $item->sales_p30 - $alzaT30);
             }
 
             $incomingQty = (int) ($incomingByEan[$item->ean] ?? 0);
@@ -602,7 +604,7 @@ class ProductStatController extends Controller
             $item->s1_coverage_days = $s1CoverageDays;
             $item->total_coverage_days = $totalCoverageDays;
             $item->alza_ready_stock = $alzaReadyStock;
-            $item->alza_t30 = (int) round((float) ($alzaT30BySku[$item->sku] ?? 0));
+            $item->alza_t30 = $alzaT30;
             $item->recommended_s1_order = $recommendedS1;
             $item->status_meta = $status;
             $item->supplier_names = $this->extractSupplierNames($item->supplier_raw);

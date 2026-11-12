@@ -38,7 +38,7 @@ class ProductStatController extends Controller
 
         $filters = $request->validate([
             'supplier' => ['nullable', 'string', 'max:255'],
-            'sales_channel' => ['nullable', 'string', 'in:all,alza'],
+            'sales_channel' => ['nullable', 'string', 'in:all,alza,non_alza'],
             'supplier_stock' => ['nullable', 'string', 'in:all,in_stock,out_of_stock,unknown'],
             'status' => ['nullable', 'string', 'in:all,order,watch,stock,clearance,lost_sales,price_check'],
             'q' => ['nullable', 'string', 'max:255'],
@@ -68,7 +68,7 @@ class ProductStatController extends Controller
 
         $filters = $request->validate([
             'supplier' => ['nullable', 'string', 'max:255'],
-            'sales_channel' => ['nullable', 'string', 'in:all,alza'],
+            'sales_channel' => ['nullable', 'string', 'in:all,alza,non_alza'],
             'supplier_stock' => ['nullable', 'string', 'in:all,in_stock,out_of_stock,unknown'],
             'status' => ['nullable', 'string', 'in:all,order,watch,stock,clearance,lost_sales,price_check'],
             'q' => ['nullable', 'string', 'max:255'],
@@ -402,7 +402,7 @@ class ProductStatController extends Controller
 
         $validated = $request->validate([
             'supplier' => ['required', 'string', 'max:255'],
-            'sales_channel' => ['nullable', 'string', 'in:all,alza'],
+            'sales_channel' => ['nullable', 'string', 'in:all,alza,non_alza'],
             'q' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'in:all,order,watch,stock,clearance,lost_sales,price_check'],
             'stock_field' => ['nullable', 'string', 'in:s1,s2'],
@@ -448,7 +448,7 @@ class ProductStatController extends Controller
 
         $validated = $request->validate([
             'supplier' => ['required', 'string', 'max:255'],
-            'sales_channel' => ['nullable', 'string', 'in:all,alza'],
+            'sales_channel' => ['nullable', 'string', 'in:all,alza,non_alza'],
             'q' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'in:all,order,watch,stock,clearance,lost_sales,price_check'],
             'stock_field' => ['nullable', 'string', 'in:s1,s2'],
@@ -573,6 +573,8 @@ class ProductStatController extends Controller
         $enrichedItems = $items->map(function (ProductStatItem $item) use ($incomingByEan, $periodDays, $alzaT30BySku, $salesChannel) {
             if ($salesChannel === 'alza') {
                 $item->sales_p30 = (int) $item->market_alza;
+            } elseif ($salesChannel === 'non_alza') {
+                $item->sales_p30 = max(0, (int) $item->sales_p30 - (int) $item->market_alza);
             }
 
             $incomingQty = (int) ($incomingByEan[$item->ean] ?? 0);
@@ -609,7 +611,7 @@ class ProductStatController extends Controller
         });
 
         $filteredItems = $enrichedItems
-            ->when($salesChannel === 'alza', fn ($collection) => $collection->filter(fn ($item) => $item->sales_p30 > 0))
+            ->when($salesChannel !== 'all', fn ($collection) => $collection->filter(fn ($item) => $item->sales_p30 > 0))
             ->when($supplierFilter !== '', fn ($collection) => $collection->filter(fn ($item) => in_array($supplierFilter, $item->supplier_names, true)))
             ->when($search !== '', fn ($collection) => $collection->filter(function ($item) use ($search) {
                 return str_contains(mb_strtolower($item->product_name), mb_strtolower($search))

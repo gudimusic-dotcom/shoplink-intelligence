@@ -76,7 +76,7 @@
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="sl-pill">Produkty <strong class="text-slate-50">{{ $stats['products'] }}</strong></span>
                             <span class="sl-pill">Dodávatelia <strong class="text-slate-50">{{ $stats['suppliers'] }}</strong></span>
-                            <span class="sl-pill">{{ $salesChannel === 'alza' ? 'Alza P30' : 'P30' }} <strong class="text-slate-50">{{ $stats['sales_p30'] }}</strong></span>
+                            <span class="sl-pill">{{ $salesChannel === 'alza' ? 'Alza P30' : ($salesChannel === 'non_alza' ? 'Nie Alza P30' : 'P30') }} <strong class="text-slate-50">{{ $stats['sales_p30'] }}</strong></span>
                             <span class="sl-pill">Výpredaj <strong class="text-slate-50">{{ $stats['clearance'] }}</strong></span>
                             <a href="{{ route('product-stats.preparation') }}" class="sl-btn-secondary !px-3 !py-2">Príprava</a>
                             @if (!$s2Preparation)
@@ -162,6 +162,7 @@
                         <select name="sales_channel" class="sl-input !bg-white !text-slate-900">
                             <option value="all" @selected($salesChannel === 'all')>Všetky kanály</option>
                             <option value="alza" @selected($salesChannel === 'alza')>Len Alza</option>
+                            <option value="non_alza" @selected($salesChannel === 'non_alza')>Nie Alza</option>
                         </select>
                     </div>
                     <div>
@@ -262,7 +263,7 @@
                                                             <th class="px-3 py-2">SKU</th>
                                                             <th class="px-3 py-2">EAN</th>
                                                             <th class="px-3 py-2">S1</th>
-                                                            <th class="px-3 py-2 text-blue-600">{{ $salesChannel === 'alza' ? 'Alza P30' : 'P30' }}</th>
+                                                            <th class="px-3 py-2 text-blue-600">{{ $salesChannel === 'alza' ? 'Alza P30' : ($salesChannel === 'non_alza' ? 'Nie Alza P30' : 'P30') }}</th>
                                                             <th class="px-3 py-2">Objednať</th>
                                                             <th class="px-3 py-2">LastOrder</th>
                                                         </tr>
@@ -323,7 +324,7 @@
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">S1 <strong class="ml-2 text-slate-900">{{ $group['stock_s1'] }}</strong></span>
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600" title="Na ceste">✈ <strong class="ml-2 text-slate-900">{{ $group['incoming_qty'] }}</strong></span>
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">S2 <strong class="ml-2 text-slate-900">{{ $group['stock_s2'] }}</strong></span>
-                            <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">{{ $salesChannel === 'alza' ? 'Alza P30' : 'P30' }} <strong class="ml-2 text-slate-900">{{ $group['sales_p30'] }}</strong></span>
+                            <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">{{ $salesChannel === 'alza' ? 'Alza P30' : ($salesChannel === 'non_alza' ? 'Nie Alza P30' : 'P30') }} <strong class="ml-2 text-slate-900">{{ $group['sales_p30'] }}</strong></span>
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">Objednať <strong class="ml-2 text-slate-900">{{ $group['to_order_count'] }}</strong></span>
                         </div>
                     </div>
@@ -377,7 +378,7 @@
                                     <th class="px-1 py-3" style="width:56px;background:#e11d48;color:#fff;">{{ $s2Preparation ? 'FDD S2' : 'OBJ' }}</th>
                                     <th class="px-0.5 py-3 text-emerald-600" style="width:44px;">Pre</th>
                                     <th class="px-0.5 py-3 text-teal-600" style="width:44px;">T30</th>
-                                    <th class="px-0.5 py-3 text-blue-600" style="width:44px;">{{ $salesChannel === 'alza' ? 'Alza P30' : 'P30' }}</th>
+                                    <th class="px-0.5 py-3 text-blue-600" style="width:44px;">{{ $salesChannel === 'alza' ? 'Alza P30' : ($salesChannel === 'non_alza' ? 'Nie Alza P30' : 'P30') }}</th>
                                     <th class="px-0.5 py-3 text-amber-600" style="width:44px;">Alz</th>
                                     <th class="px-0.5 py-3 text-orange-600" style="width:44px;">Alz T30</th>
                                     @if ($s2Preparation)

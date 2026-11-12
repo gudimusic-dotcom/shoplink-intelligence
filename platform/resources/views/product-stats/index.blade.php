@@ -76,7 +76,7 @@
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="sl-pill">Produkty <strong class="text-slate-50">{{ $stats['products'] }}</strong></span>
                             <span class="sl-pill">Dodávatelia <strong class="text-slate-50">{{ $stats['suppliers'] }}</strong></span>
-                            <span class="sl-pill">P30 <strong class="text-slate-50">{{ $stats['sales_p30'] }}</strong></span>
+                            <span class="sl-pill">{{ $salesChannel === 'alza' ? 'Alza P30' : 'P30' }} <strong class="text-slate-50">{{ $stats['sales_p30'] }}</strong></span>
                             <span class="sl-pill">Výpredaj <strong class="text-slate-50">{{ $stats['clearance'] }}</strong></span>
                             <a href="{{ route('product-stats.preparation') }}" class="sl-btn-secondary !px-3 !py-2">Príprava</a>
                             @if (!$s2Preparation)
@@ -143,7 +143,7 @@
 
         <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <form method="GET" action="{{ route($s2Preparation ? 'product-stats.s2-preparation' : 'product-stats.index') }}" class="space-y-3">
-                <div style="display:grid;grid-template-columns:minmax(0,1.35fr) minmax(180px,0.82fr) minmax(180px,0.82fr) minmax(150px,0.55fr) minmax(120px,0.45fr) minmax(90px,0.28fr) minmax(90px,0.28fr);gap:12px;align-items:end;">
+                <div style="display:grid;grid-template-columns:minmax(0,1.35fr) minmax(180px,0.82fr) minmax(180px,0.82fr) minmax(180px,0.82fr) minmax(150px,0.55fr) minmax(120px,0.45fr) minmax(90px,0.28fr) minmax(90px,0.28fr);gap:12px;align-items:end;">
                     <div class="min-w-0">
                         <label class="sl-form-label" style="color:#0f172a;">Hľadať</label>
                         <input type="text" name="q" value="{{ $search }}" placeholder="Produkt, SKU, EAN" class="sl-input">
@@ -155,6 +155,13 @@
                             @foreach ($supplierOptions as $supplier)
                                 <option value="{{ $supplier }}" @selected($supplierFilter === $supplier)>{{ $supplier }}</option>
                             @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="sl-form-label" style="color:#0f172a;">Predaje</label>
+                        <select name="sales_channel" class="sl-input !bg-white !text-slate-900">
+                            <option value="all" @selected($salesChannel === 'all')>Všetky kanály</option>
+                            <option value="alza" @selected($salesChannel === 'alza')>Len Alza</option>
                         </select>
                     </div>
                     <div>
@@ -255,7 +262,7 @@
                                                             <th class="px-3 py-2">SKU</th>
                                                             <th class="px-3 py-2">EAN</th>
                                                             <th class="px-3 py-2">S1</th>
-                                                            <th class="px-3 py-2 text-blue-600">P30</th>
+                                                            <th class="px-3 py-2 text-blue-600">{{ $salesChannel === 'alza' ? 'Alza P30' : 'P30' }}</th>
                                                             <th class="px-3 py-2">Objednať</th>
                                                             <th class="px-3 py-2">LastOrder</th>
                                                         </tr>
@@ -316,7 +323,7 @@
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">S1 <strong class="ml-2 text-slate-900">{{ $group['stock_s1'] }}</strong></span>
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600" title="Na ceste">✈ <strong class="ml-2 text-slate-900">{{ $group['incoming_qty'] }}</strong></span>
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">S2 <strong class="ml-2 text-slate-900">{{ $group['stock_s2'] }}</strong></span>
-                            <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">P30 <strong class="ml-2 text-slate-900">{{ $group['sales_p30'] }}</strong></span>
+                            <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">{{ $salesChannel === 'alza' ? 'Alza P30' : 'P30' }} <strong class="ml-2 text-slate-900">{{ $group['sales_p30'] }}</strong></span>
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">Objednať <strong class="ml-2 text-slate-900">{{ $group['to_order_count'] }}</strong></span>
                         </div>
                     </div>
@@ -324,6 +331,7 @@
                         <form method="POST" action="{{ route($s2Preparation ? 'product-stats.export-s2-csv' : 'product-stats.export-csv') }}" class="py-1" id="supplier-export-{{ \Illuminate\Support\Str::slug($group['supplier']) }}">
                             @csrf
                             <input type="hidden" name="supplier" value="{{ $supplierFilter }}">
+                            <input type="hidden" name="sales_channel" value="{{ $salesChannel }}">
                             <input type="hidden" name="q" value="{{ $search }}">
                             <input type="hidden" name="status" value="{{ $statusFilter }}">
                             <input type="hidden" name="stock_field" value="{{ $stockField }}">
@@ -369,7 +377,7 @@
                                     <th class="px-1 py-3" style="width:56px;background:#e11d48;color:#fff;">{{ $s2Preparation ? 'FDD S2' : 'OBJ' }}</th>
                                     <th class="px-0.5 py-3 text-emerald-600" style="width:44px;">Pre</th>
                                     <th class="px-0.5 py-3 text-teal-600" style="width:44px;">T30</th>
-                                    <th class="px-0.5 py-3 text-blue-600" style="width:44px;">P30</th>
+                                    <th class="px-0.5 py-3 text-blue-600" style="width:44px;">{{ $salesChannel === 'alza' ? 'Alza P30' : 'P30' }}</th>
                                     <th class="px-0.5 py-3 text-amber-600" style="width:44px;">Alz</th>
                                     <th class="px-0.5 py-3 text-orange-600" style="width:44px;">Alz T30</th>
                                     @if ($s2Preparation)

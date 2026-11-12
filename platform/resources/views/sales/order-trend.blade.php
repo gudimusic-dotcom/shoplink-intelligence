@@ -79,11 +79,11 @@
                     @foreach ($chart as $point)
                         <div class="flex min-w-[54px] flex-1 flex-col items-center justify-end gap-2">
                             <div class="flex h-[270px] w-full items-end justify-center gap-1">
-                                <div class="group relative w-1/2 max-w-[28px] rounded-t-md bg-rose-500" style="height: {{ $point['current'] > 0 ? max(3, ($point['current'] / $maxOrders) * 100) : 0 }}%;" title="{{ $point['current'] }} objednávok">
-                                    <span class="pointer-events-none absolute -top-5 left-1/2 hidden -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-slate-700 group-hover:block">{{ $point['current'] }}</span>
+                                <div class="group relative w-1/2 max-w-[28px] rounded-t-md bg-rose-500" style="height: {{ $point['current'] > 0 ? max(6, round(($point['current'] / $maxOrders) * 270)) : 0 }}px;" title="{{ $point['current'] }} objednávok">
+                                    <span class="pointer-events-none absolute -top-5 left-1/2 whitespace-nowrap text-[10px] font-semibold text-slate-700">{{ $point['current'] ?: '' }}</span>
                                 </div>
-                                <div class="group relative w-1/2 max-w-[28px] rounded-t-md bg-slate-400" style="height: {{ $point['previous'] > 0 ? max(3, ($point['previous'] / $maxOrders) * 100) : 0 }}%;" title="{{ $point['previous'] }} objednávok minulý rok">
-                                    <span class="pointer-events-none absolute -top-5 left-1/2 hidden -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-slate-700 group-hover:block">{{ $point['previous'] }}</span>
+                                <div class="group relative w-1/2 max-w-[28px] rounded-t-md bg-slate-400" style="height: {{ $point['previous'] > 0 ? max(6, round(($point['previous'] / $maxOrders) * 270)) : 0 }}px;" title="{{ $point['previous'] }} objednávok minulý rok">
+                                    <span class="pointer-events-none absolute -top-5 left-1/2 whitespace-nowrap text-[10px] font-semibold text-slate-700">{{ $point['previous'] ?: '' }}</span>
                                 </div>
                             </div>
                             <span class="text-[10px] font-semibold text-slate-500">{{ $point['label'] }}</span>

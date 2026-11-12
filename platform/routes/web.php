@@ -72,6 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/task-categories/{taskCategory}', [TaskCategoryController::class, 'destroy'])->name('task-categories.destroy');
 
     Route::get('/sales', [SalesIntelligenceController::class, 'index'])->name('sales.index');
+    Route::get('/sales/order-trend', [SalesIntelligenceController::class, 'orderTrend'])->name('sales.order-trend');
     Route::get('/sales/top30', [SalesIntelligenceController::class, 'top30'])->name('sales.top30');
     Route::get('/sales/detail', [SalesIntelligenceController::class, 'detail'])->name('sales.detail');
     Route::get('/sales/category-report', [SalesIntelligenceController::class, 'categoryReport'])->name('sales.category-report');

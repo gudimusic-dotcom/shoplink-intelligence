@@ -10,6 +10,7 @@
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2">
+                        <a href="{{ route('sales.order-trend') }}" class="sl-btn-secondary">Trend objednávok</a>
                         <a href="{{ route('sales.top30') }}" class="sl-btn-primary">Top 30</a>
                         <a href="{{ route('sales.category-report', request()->only(['date_from', 'date_to', 'category_level'])) }}" class="sl-btn-secondary">Kategórie KPI</a>
                         <a href="{{ route('sales.detail', request()->only(['date_from', 'date_to'])) }}" class="sl-btn-secondary">Sales Detail</a>

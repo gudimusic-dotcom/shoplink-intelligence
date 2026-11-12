@@ -7,6 +7,7 @@ use App\Models\SalesOrderLine;
 use App\Services\HeurekaProductCatalogImportService;
 use App\Services\MobdataOrderImportService;
 use App\Services\MobdataOrderLineImportService;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -15,6 +16,65 @@ use Illuminate\Support\Facades\DB;
 
 class SalesIntelligenceController extends Controller
 {
+    public function orderTrend(Request $request): View
+    {
+        $this->authorizeAccess($request);
+
+        $filters = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'channel' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $dateFrom = CarbonImmutable::parse($filters['date_from'] ?? now()->startOfYear()->toDateString())->startOfDay();
+        $dateTo = CarbonImmutable::parse($filters['date_to'] ?? now()->toDateString())->endOfDay();
+        $channel = (string) ($filters['channel'] ?? 'all');
+        $previousFrom = $dateFrom->subYear();
+        $previousTo = $dateTo->subYear();
+        $chartStart = $dateFrom->startOfWeek(CarbonImmutable::MONDAY);
+        $chartEnd = $dateTo->endOfWeek(CarbonImmutable::SUNDAY);
+        $weekCount = $chartStart->diffInWeeks($chartEnd) + 1;
+        $previousChartStart = $previousFrom->startOfWeek(CarbonImmutable::MONDAY);
+
+        $currentWeekly = $this->weeklyOrderCounts($dateFrom, $dateTo, $channel);
+        $previousWeekly = $this->weeklyOrderCounts($previousFrom, $previousTo, $channel);
+        $chart = collect(range(0, $weekCount - 1))->map(function (int $index) use ($chartStart, $previousChartStart, $currentWeekly, $previousWeekly): array {
+            $currentWeek = $chartStart->addWeeks($index);
+            $previousWeek = $previousChartStart->addWeeks($index);
+
+            return [
+                'label' => $currentWeek->format('d.m.'),
+                'current' => (int) ($currentWeekly[$currentWeek->toDateString()] ?? 0),
+                'previous' => (int) ($previousWeekly[$previousWeek->toDateString()] ?? 0),
+            ];
+        });
+
+        $marketplaces = SalesOrderLine::query()
+            ->where('channel_type', 'marketplace')
+            ->whereNotNull('marketplace_display')
+            ->where('marketplace_display', '<>', '')
+            ->distinct()
+            ->orderBy('marketplace_display')
+            ->pluck('marketplace_display');
+        $currentTotal = $chart->sum('current');
+        $previousTotal = $chart->sum('previous');
+        $maxOrders = max(1, (int) $chart->max(fn (array $point): int => max($point['current'], $point['previous'])));
+
+        return view('sales.order-trend', [
+            'chart' => $chart,
+            'dateFrom' => $dateFrom->toDateString(),
+            'dateTo' => $dateTo->toDateString(),
+            'previousFrom' => $previousFrom->toDateString(),
+            'previousTo' => $previousTo->toDateString(),
+            'channel' => $channel,
+            'marketplaces' => $marketplaces,
+            'currentTotal' => $currentTotal,
+            'previousTotal' => $previousTotal,
+            'difference' => $previousTotal > 0 ? round((($currentTotal - $previousTotal) / $previousTotal) * 100, 1) : null,
+            'maxOrders' => $maxOrders,
+        ]);
+    }
+
     public function index(Request $request): View
     {
         $this->authorizeAccess($request);
@@ -556,6 +616,25 @@ class SalesIntelligenceController extends Controller
         return SalesOrderLine::query()
             ->when($dateFrom, fn (Builder $query): Builder => $query->whereDate('ordered_at', '>=', $dateFrom))
             ->when($dateTo, fn (Builder $query): Builder => $query->whereDate('ordered_at', '<=', $dateTo));
+    }
+
+    private function weeklyOrderCounts(CarbonImmutable $from, CarbonImmutable $to, string $channel): array
+    {
+        $orders = SalesOrderLine::query()
+            ->select('order_code')
+            ->selectRaw('min(ordered_at) as ordered_at')
+            ->whereBetween('ordered_at', [$from, $to])
+            ->whereNotNull('order_code')
+            ->when($channel === 'own_web', fn (Builder $query): Builder => $query->where('channel_type', 'own_web'))
+            ->when($channel === 'marketplace', fn (Builder $query): Builder => $query->where('channel_type', 'marketplace'))
+            ->when(! in_array($channel, ['all', 'own_web', 'marketplace'], true), fn (Builder $query): Builder => $query->where('marketplace_display', $channel))
+            ->groupBy('order_code')
+            ->get();
+
+        return $orders
+            ->groupBy(fn ($order): string => CarbonImmutable::parse($order->ordered_at)->startOfWeek(CarbonImmutable::MONDAY)->toDateString())
+            ->map(fn ($week): int => $week->count())
+            ->all();
     }
 
     private function topProductsForDates($from, $to)

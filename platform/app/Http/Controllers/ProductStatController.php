@@ -555,9 +555,11 @@ class ProductStatController extends Controller
             ->get();
         $lastSalesAt = SalesOrderLine::query()->max('ordered_at');
         $alzaT30BySku = collect();
+        $t90BySku = collect();
         if ($lastSalesAt) {
             $salesPeriodTo = CarbonImmutable::parse($lastSalesAt)->endOfDay();
             $salesPeriodFrom = $salesPeriodTo->subDays(29)->startOfDay();
+            $sales90From = $salesPeriodTo->subDays(89)->startOfDay();
             $alzaT30BySku = SalesOrderLine::query()
                 ->select('model')
                 ->selectRaw('SUM(quantity) as alza_t30')
@@ -565,13 +567,20 @@ class ProductStatController extends Controller
                 ->whereRaw("UPPER(COALESCE(marketplace_display, '')) LIKE 'ALZA%'")
                 ->groupBy('model')
                 ->pluck('alza_t30', 'model');
+            $t90BySku = SalesOrderLine::query()
+                ->select('model')
+                ->selectRaw('SUM(quantity) as t90')
+                ->whereBetween('ordered_at', [$sales90From, $salesPeriodTo])
+                ->groupBy('model')
+                ->pluck('t90', 'model');
         }
         $periodDays = $latestImport?->period_from && $latestImport?->period_to
             ? max(1, $latestImport->period_from->diffInDays($latestImport->period_to) + 1)
             : null;
 
-        $enrichedItems = $items->map(function (ProductStatItem $item) use ($incomingByEan, $periodDays, $alzaT30BySku, $salesChannel) {
+        $enrichedItems = $items->map(function (ProductStatItem $item) use ($incomingByEan, $periodDays, $alzaT30BySku, $t90BySku, $salesChannel) {
             $alzaT30 = (int) round((float) ($alzaT30BySku[$item->sku] ?? 0));
+            $item->t90 = (int) round((float) ($t90BySku[$item->sku] ?? 0));
 
             if ($salesChannel === 'alza') {
                 $item->sales_p30 = $alzaT30;

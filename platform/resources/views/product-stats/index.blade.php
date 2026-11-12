@@ -356,6 +356,7 @@
                                 <col style="width: 44px;">
                                 <col style="width: 44px;">
                                 <col style="width: 44px;">
+                                <col style="width: 44px;">
                                 @if ($s2Preparation)
                                     <col style="width: 44px;">
                                 @endif
@@ -378,6 +379,7 @@
                                     <th class="px-1 py-3" style="width:56px;background:#e11d48;color:#fff;">{{ $s2Preparation ? 'FDD S2' : 'OBJ' }}</th>
                                     <th class="px-0.5 py-3 text-emerald-600" style="width:44px;">Pre</th>
                                     <th class="px-0.5 py-3 text-teal-600" style="width:44px;">T30</th>
+                                    <th class="px-0.5 py-3 text-cyan-600" style="width:44px;">T90</th>
                                     <th class="px-0.5 py-3 text-blue-600" style="width:44px;">{{ $salesChannel === 'alza' ? 'Alza T30' : ($salesChannel === 'non_alza' ? 'Nie Alza T30' : 'P30') }}</th>
                                     <th class="px-0.5 py-3 text-amber-600" style="width:44px;">Alz</th>
                                     <th class="px-0.5 py-3 text-orange-600" style="width:44px;">Alz T30</th>
@@ -458,6 +460,7 @@
                                         </td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-emerald-600">{{ $item->sales_period }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-teal-600">{{ $item->trend_t30 ?? '---' }}</td>
+                                        <td class="px-0.5 py-3 text-center font-semibold text-cyan-600">{{ $item->t90 }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-blue-600">{{ $item->sales_p30 }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-amber-600">{{ $item->market_alza }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-orange-600">{{ $item->alza_t30 }}</td>

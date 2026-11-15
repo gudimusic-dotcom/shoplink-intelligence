@@ -12,6 +12,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class SalesIntelligenceController extends Controller
@@ -590,6 +591,8 @@ class SalesIntelligenceController extends Controller
         ]);
 
         $job = $importService->import($validated['order_lines_file'], $request->user()->id);
+        $cacheVersion = (int) Cache::get('product-stats-sales-metrics-version', 0);
+        Cache::put('product-stats-sales-metrics-version', $cacheVersion + 1, now()->addYear());
 
         return redirect()
             ->route('sales.index')

@@ -19,6 +19,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -585,22 +586,38 @@ class ProductStatController extends Controller
             $salesPeriodTo = CarbonImmutable::parse($lastSalesAt)->endOfDay();
             $salesPeriodFrom = $salesPeriodTo->subDays(29)->startOfDay();
             $sales90From = $salesPeriodTo->subDays(89)->startOfDay();
-            $skuList = $items->pluck('sku')->filter()->unique()->values();
-            $alzaT30BySku = SalesOrderLine::query()
-                ->select('model')
-                ->selectRaw('SUM(quantity) as alza_t30')
-                ->whereBetween('ordered_at', [$salesPeriodFrom, $salesPeriodTo])
-                ->whereIn('model', $skuList)
-                ->whereRaw("UPPER(COALESCE(marketplace_display, '')) LIKE 'ALZA%'")
-                ->groupBy('model')
-                ->pluck('alza_t30', 'model');
-            $t90BySku = SalesOrderLine::query()
-                ->select('model')
-                ->selectRaw('SUM(quantity) as t90')
-                ->whereBetween('ordered_at', [$sales90From, $salesPeriodTo])
-                ->whereIn('model', $skuList)
-                ->groupBy('model')
-                ->pluck('t90', 'model');
+            $metricCacheVersion = (int) Cache::get('product-stats-sales-metrics-version', 0);
+            $metricCacheKey = 'product-stats-sales-metrics:'.$metricCacheVersion.':'.($latestImport?->id ?? 0).':'.CarbonImmutable::parse($lastSalesAt)->timestamp;
+            $salesMetrics = Cache::remember($metricCacheKey, now()->addMinutes(15), function () use ($latestImport, $salesPeriodFrom, $salesPeriodTo, $sales90From): array {
+                $skuList = ProductStatItem::query()
+                    ->when($latestImport, fn ($query) => $query->where('import_id', $latestImport->id))
+                    ->pluck('sku')
+                    ->filter()
+                    ->unique()
+                    ->values();
+
+                return [
+                    'alza_t30' => SalesOrderLine::query()
+                        ->select('model')
+                        ->selectRaw('SUM(quantity) as alza_t30')
+                        ->whereBetween('ordered_at', [$salesPeriodFrom, $salesPeriodTo])
+                        ->whereIn('model', $skuList)
+                        ->whereRaw("UPPER(COALESCE(marketplace_display, '')) LIKE 'ALZA%'")
+                        ->groupBy('model')
+                        ->pluck('alza_t30', 'model')
+                        ->all(),
+                    't90' => SalesOrderLine::query()
+                        ->select('model')
+                        ->selectRaw('SUM(quantity) as t90')
+                        ->whereBetween('ordered_at', [$sales90From, $salesPeriodTo])
+                        ->whereIn('model', $skuList)
+                        ->groupBy('model')
+                        ->pluck('t90', 'model')
+                        ->all(),
+                ];
+            });
+            $alzaT30BySku = collect($salesMetrics['alza_t30'] ?? []);
+            $t90BySku = collect($salesMetrics['t90'] ?? []);
         }
         $periodDays = $latestImport?->period_from && $latestImport?->period_to
             ? max(1, $latestImport->period_from->diffInDays($latestImport->period_to) + 1)

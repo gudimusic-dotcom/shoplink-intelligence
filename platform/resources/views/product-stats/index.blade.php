@@ -483,8 +483,8 @@
                 </article>
             @empty
                 <section class="rounded-3xl border border-slate-200 bg-white px-5 py-16 text-center shadow-sm">
-                    <strong class="block text-base font-semibold text-slate-900">Zatiaľ tu nie sú žiadne importované dáta.</strong>
-                    <p class="mt-2 text-sm text-slate-500">Nahraj `predaj.xlsx` a modul vytvorí prvý Product Stats prehľad.</p>
+                    <strong class="block text-base font-semibold text-slate-900">{{ $supplierFilter === '' ? 'Vyber dodávateľa' : 'Zatiaľ tu nie sú žiadne importované dáta.' }}</strong>
+                    <p class="mt-2 text-sm text-slate-500">{{ $supplierFilter === '' ? 'Po výbere sa načítajú iba produkty vybraného dodávateľa.' : 'Nahraj predaj.xlsx a modul vytvorí prvý Product Stats prehľad.' }}</p>
                 </section>
             @endforelse
         </section>

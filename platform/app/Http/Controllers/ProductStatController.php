@@ -518,12 +518,37 @@ class ProductStatController extends Controller
             ->where('supplier_name', 'Fdd')
             ->sum('qty_incoming');
         $supplierStocks = ProductStatSupplierStock::query()
+            ->select(['supplier_name', 'supplier_code', 'stock_status'])
             ->get()
             ->groupBy(fn (ProductStatSupplierStock $stock) => mb_strtolower($stock->supplier_name))
             ->map(fn ($stocks) => $stocks->keyBy('supplier_code'));
         $hurtelStocks = $supplierStocks->get('hurtel', collect());
 
         $items = ProductStatItem::query()
+            ->select([
+                'id',
+                'sku',
+                'ean',
+                'stock_code',
+                'supplier_raw',
+                'supplier_name',
+                'supplier_code',
+                'product_name',
+                'stock_s1',
+                'stock_s2',
+                'sales_period',
+                'market_noa',
+                'market_alza',
+                'market_pr1',
+                'market_pr2',
+                'sales_p30',
+                'sales_pop',
+                'external_stock',
+                'clearance_flag',
+                'purchase_cost',
+                'last_order_at',
+                'product_age_days',
+            ])
             ->when($latestImport, fn ($query) => $query->where('import_id', $latestImport->id))
             ->when($supplierFilter !== '', function ($query) use ($supplierFilter) {
                 $query->where(function ($supplierQuery) use ($supplierFilter) {
@@ -560,10 +585,12 @@ class ProductStatController extends Controller
             $salesPeriodTo = CarbonImmutable::parse($lastSalesAt)->endOfDay();
             $salesPeriodFrom = $salesPeriodTo->subDays(29)->startOfDay();
             $sales90From = $salesPeriodTo->subDays(89)->startOfDay();
+            $skuList = $items->pluck('sku')->filter()->unique()->values();
             $alzaT30BySku = SalesOrderLine::query()
                 ->select('model')
                 ->selectRaw('SUM(quantity) as alza_t30')
                 ->whereBetween('ordered_at', [$salesPeriodFrom, $salesPeriodTo])
+                ->whereIn('model', $skuList)
                 ->whereRaw("UPPER(COALESCE(marketplace_display, '')) LIKE 'ALZA%'")
                 ->groupBy('model')
                 ->pluck('alza_t30', 'model');
@@ -571,6 +598,7 @@ class ProductStatController extends Controller
                 ->select('model')
                 ->selectRaw('SUM(quantity) as t90')
                 ->whereBetween('ordered_at', [$sales90From, $salesPeriodTo])
+                ->whereIn('model', $skuList)
                 ->groupBy('model')
                 ->pluck('t90', 'model');
         }

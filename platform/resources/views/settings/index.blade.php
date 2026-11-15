@@ -288,7 +288,7 @@
                                                 <span class="text-sm font-semibold text-slate-950">Objednaný tovar</span>
                                                 @if ($supplierKey === 'fdd')
                                                     <div class="flex flex-wrap items-center justify-end gap-2">
-                                                        <span class="text-sm text-slate-950">{{ $link['incoming_count'] > 0 ? "{$link['incoming_count']} / {$link['incoming_units']} ks" : 'Bez feedu' }}{{ $link['incoming_checked_at'] ? ' · '.$link['incoming_checked_at'] : '' }}</span>
+                                                        <span class="text-sm text-slate-950">{{ $link['incoming_count'] > 0 ? "{$link['incoming_count']} / S1 {$link['incoming_s1_units']} ks · S2 {$link['incoming_s2_units']} ks" : 'Bez feedu' }}{{ $link['incoming_checked_at'] ? ' · '.$link['incoming_checked_at'] : '' }}</span>
                                                         @if ($link['incoming_count'] > 0)
                                                             <button type="submit" form="clear-fdd-incoming" class="sl-btn-secondary !px-2 !py-1.5 !text-rose-600" onclick="return confirm('Naozaj vymazať importovaný objednaný tovar FDD?')">Vymazať dáta</button>
                                                         @endif
@@ -302,8 +302,19 @@
                                                     <label class="sl-form-label" for="supplier-incoming-{{ $loop->index }}">Feed URL</label>
                                                     <x-ts-input id="supplier-incoming-{{ $loop->index }}" name="suppliers[{{ $loop->index }}][incoming_feed_url]" :value="old('suppliers.'.$loop->index.'.incoming_feed_url', $link['incoming_feed_url'])" placeholder="URL objednateľného CSV" class="ts-field-reset" />
                                                 </div>
+                                                <div>
+                                                    <label class="sl-form-label" for="incoming-target-url-{{ $loop->index }}">Cieľ URL</label>
+                                                    <select id="incoming-target-url-{{ $loop->index }}" name="suppliers[{{ $loop->index }}][incoming_target_warehouse]" class="sl-input !h-10 !bg-white !text-slate-900">
+                                                        <option value="s1" @selected(old('suppliers.'.$loop->index.'.incoming_target_warehouse', 's1') === 's1')>S1</option>
+                                                        <option value="s2" @selected(old('suppliers.'.$loop->index.'.incoming_target_warehouse', 's1') === 's2')>S2</option>
+                                                    </select>
+                                                </div>
                                                 <div class="flex flex-wrap gap-1">
                                                     <button type="submit" formaction="{{ route('product-stats.import-fdd-incoming-url') }}" name="import_incoming_supplier_index" value="{{ $loop->index }}" class="sl-btn-primary !px-3 !py-2">Import URL</button>
+                                                    <select form="settings-fdd-incoming-import" name="target_warehouse" class="sl-input !h-10 !w-20 !bg-white !text-slate-900">
+                                                        <option value="s1" @selected(old('target_warehouse', 's1') === 's1')>CSV S1</option>
+                                                        <option value="s2" @selected(old('target_warehouse', 's1') === 's2')>CSV S2</option>
+                                                    </select>
                                                     <label class="sl-btn-primary cursor-pointer !px-3 !py-2">
                                                         Import CSV
                                                         <input form="settings-fdd-incoming-import" type="file" name="file" accept=".csv,.txt" class="sr-only" required onchange="this.form.submit()">

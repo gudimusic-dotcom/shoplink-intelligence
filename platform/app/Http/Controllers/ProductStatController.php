@@ -133,9 +133,10 @@ class ProductStatController extends Controller
 
         $validated = $request->validate([
             'file' => ['required', 'file', 'mimes:csv,txt'],
+            'target_warehouse' => ['required', 'string', 'in:s1,s2'],
         ]);
 
-        $rows = $this->incomingImportService->parseFddCsv($validated['file']);
+        $rows = $this->incomingImportService->parseFddCsv($validated['file'], $validated['target_warehouse']);
 
         DB::transaction(function () use ($request, $validated, $rows) {
             ProductStatIncomingItem::query()
@@ -169,11 +170,13 @@ class ProductStatController extends Controller
         ]);
         $index = $validated['import_incoming_supplier_index'];
         $incomingFeedUrl = $request->input('suppliers.'.$index.'.incoming_feed_url');
+        $targetWarehouse = $request->input('suppliers.'.$index.'.incoming_target_warehouse');
         validator(
-            ['supplier' => $request->input('suppliers.'.$index.'.supplier_name'), 'incoming_feed_url' => $incomingFeedUrl],
+            ['supplier' => $request->input('suppliers.'.$index.'.supplier_name'), 'incoming_feed_url' => $incomingFeedUrl, 'target_warehouse' => $targetWarehouse],
             [
                 'supplier' => ['required', 'string', 'in:Fdd'],
                 'incoming_feed_url' => ['required', 'url', 'max:2000'],
+                'target_warehouse' => ['required', 'string', 'in:s1,s2'],
             ],
         )->validate();
         $temporaryPath = null;
@@ -192,7 +195,7 @@ class ProductStatController extends Controller
                 null,
                 true,
             );
-            $rows = $this->incomingImportService->parseFddCsv($file);
+            $rows = $this->incomingImportService->parseFddCsv($file, $targetWarehouse);
 
             DB::transaction(function () use ($request, $incomingFeedUrl, $rows): void {
                 ProductStatIncomingItem::query()->where('supplier_name', 'Fdd')->delete();
@@ -510,6 +513,13 @@ class ProductStatController extends Controller
         $incomingByEan = ProductStatIncomingItem::query()
             ->selectRaw('ean, SUM(qty_incoming) as qty_incoming')
             ->whereNotNull('ean')
+            ->where('target_warehouse', 's1')
+            ->groupBy('ean')
+            ->pluck('qty_incoming', 'ean');
+        $incomingS2ByEan = ProductStatIncomingItem::query()
+            ->selectRaw('ean, SUM(qty_incoming) as qty_incoming')
+            ->whereNotNull('ean')
+            ->where('target_warehouse', 's2')
             ->groupBy('ean')
             ->pluck('qty_incoming', 'ean');
         $fddIncomingCount = ProductStatIncomingItem::query()
@@ -623,7 +633,7 @@ class ProductStatController extends Controller
             ? max(1, $latestImport->period_from->diffInDays($latestImport->period_to) + 1)
             : null;
 
-        $enrichedItems = $items->map(function (ProductStatItem $item) use ($incomingByEan, $periodDays, $alzaT30BySku, $t90BySku, $salesChannel) {
+        $enrichedItems = $items->map(function (ProductStatItem $item) use ($incomingByEan, $incomingS2ByEan, $periodDays, $alzaT30BySku, $t90BySku, $salesChannel) {
             $alzaT30 = (int) round((float) ($alzaT30BySku[$item->sku] ?? 0));
             $item->t90 = (int) round((float) ($t90BySku[$item->sku] ?? 0));
 
@@ -634,6 +644,7 @@ class ProductStatController extends Controller
             }
 
             $incomingQty = (int) ($incomingByEan[$item->ean] ?? 0);
+            $incomingS2Qty = (int) ($incomingS2ByEan[$item->ean] ?? 0);
             $targetCoverageDays = 45;
             $dailySales = $item->sales_p30 > 0 ? round($item->sales_p30 / 30, 2) : 0.0;
             $trendT30 = $periodDays ? (int) round(($item->sales_period / $periodDays) * 30) : null;
@@ -652,6 +663,8 @@ class ProductStatController extends Controller
             );
 
             $item->incoming_qty = $incomingQty;
+            $item->incoming_s1_qty = $incomingQty;
+            $item->incoming_s2_qty = $incomingS2Qty;
             $item->effective_stock_s1 = $effectiveS1;
             $item->daily_sales = $dailySales;
             $item->trend_t30 = $trendT30;
@@ -771,6 +784,7 @@ class ProductStatController extends Controller
                     'sales_p30' => $allItems->sum('sales_p30'),
                     'stock_s1' => $allItems->sum('stock_s1'),
                     'incoming_qty' => $allItems->sum('incoming_qty'),
+                    'incoming_s2_qty' => $allItems->sum('incoming_s2_qty'),
                     'stock_s2' => $allItems->sum('stock_s2'),
                     'to_order_count' => $allItems->filter(fn ($item) => $item->status_meta['key'] === 'order')->count(),
                     'to_order_units' => $allItems->sum('recommended_s1_order'),
@@ -884,7 +898,8 @@ class ProductStatController extends Controller
                         $s1SafetyStock = (int) ceil(($otherT30 / 30) * $targetDays);
                         $s2TargetStock = (int) ceil(($alzaT30 / 30) * $targetDays);
                         $s1Surplus = max(0, (int) $item->stock_s1 - $s1SafetyStock);
-                        $s2Shortage = max(0, $s2TargetStock - (int) $item->stock_s2);
+                        $s2Available = (int) $item->stock_s2 + (int) ($item->incoming_s2_qty ?? 0);
+                        $s2Shortage = max(0, $s2TargetStock - $s2Available);
                         $transfer = min($s1Surplus, $s2Shortage);
                         $fddOrder = max(0, $s2Shortage - $transfer);
 
@@ -959,6 +974,13 @@ class ProductStatController extends Controller
         $incomingByEan = ProductStatIncomingItem::query()
             ->selectRaw('ean, SUM(qty_incoming) as qty_incoming')
             ->whereNotNull('ean')
+            ->where('target_warehouse', 's1')
+            ->groupBy('ean')
+            ->pluck('qty_incoming', 'ean');
+        $incomingS2ByEan = ProductStatIncomingItem::query()
+            ->selectRaw('ean, SUM(qty_incoming) as qty_incoming')
+            ->whereNotNull('ean')
+            ->where('target_warehouse', 's2')
             ->groupBy('ean')
             ->pluck('qty_incoming', 'ean');
         $supplierSettings = ProductStatSupplierSetting::query()
@@ -996,7 +1018,7 @@ class ProductStatController extends Controller
         $limit = $supplierFilter !== '' ? 200 : 30;
 
         $rows = $items
-            ->map(function (ProductStatItem $item) use ($incomingByEan, $salesBySku, $supplierSettings) {
+            ->map(function (ProductStatItem $item) use ($incomingByEan, $incomingS2ByEan, $salesBySku, $supplierSettings) {
                 $sales = $salesBySku->get($item->sku);
                 $sales30S2 = (float) ($sales?->alza_30 ?? 0);
                 $sales30S1 = max(0, (float) ($sales?->own_web_30 ?? 0) + (float) ($sales?->marketplace_30 ?? 0) - $sales30S2);
@@ -1010,6 +1032,7 @@ class ProductStatController extends Controller
                 $sales180 = $sales180S1 + $sales180S2;
                 $salesQ4 = $salesQ4S1 + $salesQ4S2;
                 $incomingQty = (int) ($incomingByEan[$item->ean] ?? 0);
+                $incomingS2Qty = (int) ($incomingS2ByEan[$item->ean] ?? 0);
                 $ageDays = (int) ($item->product_age_days ?? 0);
                 $hasHistoricalQ4 = $salesQ4 > 0;
                 $q4ForecastS1 = $hasHistoricalQ4 ? (int) ceil($salesQ4S1 * 1.15) : (int) ceil($sales30S1 * 3);
@@ -1017,7 +1040,7 @@ class ProductStatController extends Controller
                 $forecastS1 = max((int) ceil(($sales90S1 / 90) * 120), $q4ForecastS1);
                 $forecastS2 = max((int) ceil(($sales90S2 / 90) * 120), $q4ForecastS2);
                 $recommendedS1 = max(0, $forecastS1 - (int) $item->stock_s1 - $incomingQty);
-                $recommendedS2 = max(0, $forecastS2 - (int) $item->stock_s2);
+                $recommendedS2 = max(0, $forecastS2 - (int) $item->stock_s2 - $incomingS2Qty);
                 $forecast = $forecastS1 + $forecastS2;
                 $recommended = $recommendedS1 + $recommendedS2;
                 $supplier = $this->extractSupplierNames($item->supplier_raw)[0] ?? '---';
@@ -1045,6 +1068,8 @@ class ProductStatController extends Controller
                     'stock_s1' => (int) $item->stock_s1,
                     'stock_s2' => (int) $item->stock_s2,
                     'incoming_qty' => $incomingQty,
+                    'incoming_s1_qty' => $incomingQty,
+                    'incoming_s2_qty' => $incomingS2Qty,
                     'sales_90' => (int) round($sales90),
                     'sales_90_s1' => (int) round($sales90S1),
                     'sales_90_s2' => (int) round($sales90S2),

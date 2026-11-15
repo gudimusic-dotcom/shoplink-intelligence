@@ -46,7 +46,7 @@ class SettingsController extends Controller
                 'count' => $stocks->count(),
                 'checked_at' => $stocks->max('checked_at')?->format('d.m.Y H:i'),
             ]);
-        $fddIncomingItems = ProductStatIncomingItem::query()->where('supplier_name', 'Fdd')->get(['qty_incoming', 'created_at']);
+        $fddIncomingItems = ProductStatIncomingItem::query()->where('supplier_name', 'Fdd')->get(['qty_incoming', 'target_warehouse', 'created_at']);
 
         return view('settings.index', [
             'rates' => $rates,
@@ -54,6 +54,8 @@ class SettingsController extends Controller
             'webPushPublicKey' => (string) Config::get('services.web_push.public_key', ''),
             'fddIncomingCount' => ProductStatIncomingItem::query()->where('supplier_name', 'Fdd')->count(),
             'fddIncomingUnits' => (int) ProductStatIncomingItem::query()->where('supplier_name', 'Fdd')->sum('qty_incoming'),
+            'fddIncomingS1Units' => (int) $fddIncomingItems->where('target_warehouse', 's1')->sum('qty_incoming'),
+            'fddIncomingS2Units' => (int) $fddIncomingItems->where('target_warehouse', 's2')->sum('qty_incoming'),
             'supplierPortalLinks' => $supplierNames
                 ->map(function (string $supplierName) use ($supplierSettings, $supplierStockMeta, $fddIncomingItems) {
                     $setting = $supplierSettings->get(mb_strtolower($supplierName));
@@ -69,6 +71,8 @@ class SettingsController extends Controller
                         'stock_checked_at' => $stockMeta['checked_at'] ?? null,
                         'incoming_count' => $supplierName === 'Fdd' ? $fddIncomingItems->count() : 0,
                         'incoming_units' => $supplierName === 'Fdd' ? (int) $fddIncomingItems->sum('qty_incoming') : 0,
+                        'incoming_s1_units' => $supplierName === 'Fdd' ? (int) $fddIncomingItems->where('target_warehouse', 's1')->sum('qty_incoming') : 0,
+                        'incoming_s2_units' => $supplierName === 'Fdd' ? (int) $fddIncomingItems->where('target_warehouse', 's2')->sum('qty_incoming') : 0,
                         'incoming_checked_at' => $supplierName === 'Fdd' ? $fddIncomingItems->max('created_at')?->format('d.m.Y H:i') : null,
                         'has_data' => filled($setting?->portal_url_template)
                             || filled($setting?->stock_feed_url)

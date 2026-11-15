@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'supplier_product_id',
     'ean',
     'qty_incoming',
+    'target_warehouse',
     'raw_payload',
     'imported_by',
 ])]

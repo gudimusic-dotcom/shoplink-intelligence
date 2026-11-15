@@ -322,7 +322,7 @@
                         </div>
                         <div class="flex flex-wrap items-center gap-3 text-sm">
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">S1 <strong class="ml-2 text-slate-900">{{ $group['stock_s1'] }}</strong></span>
-                            <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600" title="Na ceste">✈ <strong class="ml-2 text-slate-900">{{ $group['incoming_qty'] }}</strong></span>
+                            <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600" title="Na ceste S1 / S2">Cesta <strong class="ml-2 text-slate-900">{{ $group['incoming_qty'] }} / {{ $group['incoming_s2_qty'] }}</strong></span>
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">S2 <strong class="ml-2 text-slate-900">{{ $group['stock_s2'] }}</strong></span>
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">{{ $salesChannel === 'alza' ? 'Alza T30' : ($salesChannel === 'non_alza' ? 'Nie Alza T30' : 'P30') }} <strong class="ml-2 text-slate-900">{{ $group['sales_p30'] }}</strong></span>
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-slate-600">Objednať <strong class="ml-2 text-slate-900">{{ $group['to_order_count'] }}</strong></span>
@@ -348,7 +348,7 @@
                                 <col style="width: 92px;">
                                 <col style="width: 92px;">
                                 <col style="width: 40px;">
-                                <col style="width: 40px;">
+                                <col style="width: 72px;">
                                 <col style="width: 40px;">
                                 <col style="width: 56px;">
                                 <col style="width: 44px;">
@@ -374,7 +374,7 @@
                                     <th class="px-2 py-3" style="width:92px;">DOD sklad</th>
                                     <th class="px-2 py-3" style="width:92px;">Stav</th>
                                     <th class="px-0.5 py-3" style="width:40px;">S1</th>
-                                    <th class="px-0.5 py-3 text-center" style="width:40px;" title="Na ceste">✈</th>
+                                    <th class="px-0.5 py-3 text-center whitespace-nowrap" style="width:72px;" title="Na ceste S1 / S2">Cesta S1/S2</th>
                                     <th class="px-0.5 py-3" style="width:40px;">S2</th>
                                     <th class="px-1 py-3" style="width:56px;background:#e11d48;color:#fff;">{{ $s2Preparation ? 'FDD S2' : 'OBJ' }}</th>
                                     <th class="px-0.5 py-3 text-emerald-600" style="width:44px;">Pre</th>
@@ -444,7 +444,7 @@
                                             @endif
                                         </td>
                                         <td class="px-0.5 py-3 text-center font-semibold {{ $item->stock_s1 === 0 ? 'text-red-600' : '' }}">{{ $item->stock_s1 }}</td>
-                                        <td class="px-0.5 py-3 text-center">{{ $item->incoming_qty }}</td>
+                                        <td class="px-0.5 py-3 text-center whitespace-nowrap">{{ $item->incoming_s1_qty }} / {{ $item->incoming_s2_qty }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold {{ $item->stock_s2 === 0 ? 'text-red-600' : '' }}">{{ $item->stock_s2 }}</td>
                                         <td class="px-1 py-3 text-center font-semibold text-slate-900">
                                             <input

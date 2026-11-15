@@ -7,7 +7,7 @@ use RuntimeException;
 
 class ProductStatsIncomingImportService
 {
-    public function parseFddCsv(UploadedFile $file): array
+    public function parseFddCsv(UploadedFile $file, string $targetWarehouse = 's1'): array
     {
         $handle = fopen($file->getRealPath(), 'r');
 
@@ -41,6 +41,7 @@ class ProductStatsIncomingImportService
                 'supplier_product_id' => $productId !== '' ? $productId : null,
                 'ean' => $ean,
                 'qty_incoming' => $qty,
+                'target_warehouse' => $targetWarehouse,
                 'raw_payload' => [
                     'product_id' => $data[0] ?? null,
                     'product_name' => $data[1] ?? null,

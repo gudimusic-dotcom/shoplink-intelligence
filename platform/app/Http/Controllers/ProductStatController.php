@@ -575,7 +575,9 @@ class ProductStatController extends Controller
                     $searchQuery
                         ->where('product_name', 'like', $search)
                         ->orWhere('sku', 'like', $search)
-                        ->orWhere('ean', 'like', $search);
+                        ->orWhere('ean', 'like', $search)
+                        ->orWhere('supplier_code', 'like', $search)
+                        ->orWhere('supplier_raw', 'like', $search);
                 });
             })
             ->when($stockField !== '' && $stockOperator !== '' && $stockValue !== null, function ($query) use ($stockField, $stockOperator, $stockValue) {
@@ -685,7 +687,9 @@ class ProductStatController extends Controller
             ->when($search !== '', fn ($collection) => $collection->filter(function ($item) use ($search) {
                 return str_contains(mb_strtolower($item->product_name), mb_strtolower($search))
                     || str_contains(mb_strtolower($item->sku), mb_strtolower($search))
-                    || str_contains(mb_strtolower((string) $item->ean), mb_strtolower($search));
+                    || str_contains(mb_strtolower((string) $item->ean), mb_strtolower($search))
+                    || str_contains(mb_strtolower((string) $item->supplier_code), mb_strtolower($search))
+                    || str_contains(mb_strtolower((string) $item->supplier_raw), mb_strtolower($search));
             }))
             ->when($statusFilter !== 'all', fn ($collection) => $collection->filter(fn ($item) => $item->status_meta['key'] === $statusFilter))
             ->when($stockField !== '' && $stockOperator !== '' && $stockValue !== null, function ($collection) use ($stockField, $stockOperator, $stockValue) {
@@ -714,7 +718,7 @@ class ProductStatController extends Controller
             fn ($a, $b) => strcmp((string) $a->product_name, (string) $b->product_name),
         ])->values();
 
-        $supplierEntries = $supplierFilter === '' ? collect() : $filteredItems
+        $supplierEntries = $filteredItems
             ->flatMap(function ($item) use ($supplierSettings, $supplierStocks) {
                 return collect($item->supplier_names)->map(function ($supplier) use ($item, $supplierSettings, $supplierStocks) {
                     $groupItem = clone $item;

@@ -592,6 +592,7 @@ class ProductStatController extends Controller
             ->orderBy('product_name')
             ->get();
         $lastSalesAt = SalesOrderLine::query()->max('ordered_at');
+        $t30BySku = collect();
         $alzaT30BySku = collect();
         $t90BySku = collect();
         if ($lastSalesAt) {
@@ -599,7 +600,7 @@ class ProductStatController extends Controller
             $salesPeriodFrom = $salesPeriodTo->subDays(29)->startOfDay();
             $sales90From = $salesPeriodTo->subDays(89)->startOfDay();
             $metricCacheVersion = (int) Cache::get('product-stats-sales-metrics-version', 0);
-            $metricCacheKey = 'product-stats-sales-metrics:'.$metricCacheVersion.':'.($latestImport?->id ?? 0).':'.CarbonImmutable::parse($lastSalesAt)->timestamp;
+            $metricCacheKey = 'product-stats-sales-metrics-v2:'.$metricCacheVersion.':'.($latestImport?->id ?? 0).':'.CarbonImmutable::parse($lastSalesAt)->timestamp;
             $salesMetrics = Cache::remember($metricCacheKey, now()->addMinutes(15), function () use ($latestImport, $salesPeriodFrom, $salesPeriodTo, $sales90From): array {
                 $skuList = ProductStatItem::query()
                     ->when($latestImport, fn ($query) => $query->where('import_id', $latestImport->id))
@@ -609,6 +610,14 @@ class ProductStatController extends Controller
                     ->values();
 
                 return [
+                    't30' => SalesOrderLine::query()
+                        ->select('model')
+                        ->selectRaw('SUM(quantity) as t30')
+                        ->whereBetween('ordered_at', [$salesPeriodFrom, $salesPeriodTo])
+                        ->whereIn('model', $skuList)
+                        ->groupBy('model')
+                        ->pluck('t30', 'model')
+                        ->all(),
                     'alza_t30' => SalesOrderLine::query()
                         ->select('model')
                         ->selectRaw('SUM(quantity) as alza_t30')
@@ -628,6 +637,7 @@ class ProductStatController extends Controller
                         ->all(),
                 ];
             });
+            $t30BySku = collect($salesMetrics['t30'] ?? []);
             $alzaT30BySku = collect($salesMetrics['alza_t30'] ?? []);
             $t90BySku = collect($salesMetrics['t90'] ?? []);
         }
@@ -635,14 +645,15 @@ class ProductStatController extends Controller
             ? max(1, $latestImport->period_from->diffInDays($latestImport->period_to) + 1)
             : null;
 
-        $enrichedItems = $items->map(function (ProductStatItem $item) use ($incomingByEan, $incomingS2ByEan, $periodDays, $alzaT30BySku, $t90BySku, $salesChannel) {
+        $enrichedItems = $items->map(function (ProductStatItem $item) use ($incomingByEan, $incomingS2ByEan, $periodDays, $t30BySku, $alzaT30BySku, $t90BySku, $salesChannel) {
             $alzaT30 = (int) round((float) ($alzaT30BySku[$item->sku] ?? 0));
+            $t30 = (int) round((float) ($t30BySku[$item->sku] ?? 0));
             $item->t90 = (int) round((float) ($t90BySku[$item->sku] ?? 0));
 
             if ($salesChannel === 'alza') {
                 $item->sales_p30 = $alzaT30;
             } elseif ($salesChannel === 'non_alza') {
-                $item->sales_p30 = max(0, (int) $item->sales_p30 - $alzaT30);
+                $item->sales_p30 = max(0, $t30 - $alzaT30);
             }
 
             $incomingQty = (int) ($incomingByEan[$item->ean] ?? 0);

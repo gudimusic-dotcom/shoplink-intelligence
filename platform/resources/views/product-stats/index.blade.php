@@ -216,6 +216,7 @@
                         <span>TOP 20</span>
                     </label>
                     <button type="submit" class="sl-btn-primary">Filtrovať</button>
+                    <button type="submit" name="show_all" value="1" class="sl-btn-secondary">Všetci dodávatelia</button>
                     <a href="{{ route($s2Preparation ? 'product-stats.s2-preparation' : 'product-stats.index') }}" class="sl-btn-secondary">Reset</a>
                     <button type="button" data-product-stats-continue class="sl-btn-secondary hidden">Pokračovať</button>
                 </div>
@@ -483,8 +484,8 @@
                 </article>
             @empty
                 <section class="rounded-3xl border border-slate-200 bg-white px-5 py-16 text-center shadow-sm">
-                    <strong class="block text-base font-semibold text-slate-900">{{ $supplierFilter === '' ? 'Vyber dodávateľa' : 'Zatiaľ tu nie sú žiadne výsledky.' }}</strong>
-                    <p class="mt-2 text-sm text-slate-500">{{ $supplierFilter === '' ? 'Po výbere sa načítajú iba produkty vybraného dodávateľa.' : 'Skontroluj filter dodávateľa alebo hľadaný produkt.' }}</p>
+                    <strong class="block text-base font-semibold text-slate-900">{{ $supplierFilter === '' && ! $showAll && ! $priorityOnly ? 'Vyber dodávateľa alebo zobraz všetkých' : 'Zatiaľ tu nie sú žiadne výsledky.' }}</strong>
+                    <p class="mt-2 text-sm text-slate-500">{{ $supplierFilter === '' && ! $showAll && ! $priorityOnly ? 'TOP 20 alebo tlačidlo Všetci dodávatelia načíta príslušné produkty.' : 'Skontroluj filter dodávateľa alebo hľadaný produkt.' }}</p>
                 </section>
             @endforelse
         </section>

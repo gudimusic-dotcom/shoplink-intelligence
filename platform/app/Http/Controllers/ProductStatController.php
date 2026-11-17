@@ -47,6 +47,7 @@ class ProductStatController extends Controller
             'stock_operator' => ['nullable', 'string', 'in:<,<=,=,>=,>'],
             'stock_value' => ['nullable', 'integer', 'min:0'],
             'priority' => ['nullable', 'string', 'in:0,1'],
+            'show_all' => ['nullable', 'string', 'in:0,1'],
         ]);
 
         return view('product-stats.index', $this->buildIndexPayload($request, $filters));
@@ -77,6 +78,7 @@ class ProductStatController extends Controller
             'stock_operator' => ['nullable', 'string', 'in:<,<=,=,>=,>'],
             'stock_value' => ['nullable', 'integer', 'min:0'],
             'priority' => ['nullable', 'string', 'in:0,1'],
+            'show_all' => ['nullable', 'string', 'in:0,1'],
         ]);
         $filters['supplier'] = $filters['supplier'] ?? 'Fdd';
 
@@ -507,6 +509,7 @@ class ProductStatController extends Controller
         $stockOperator = (string) ($filters['stock_operator'] ?? '');
         $stockValue = isset($filters['stock_value']) ? (int) $filters['stock_value'] : null;
         $priorityOnly = (string) ($filters['priority'] ?? '0') === '1';
+        $showAll = (string) ($filters['show_all'] ?? '0') === '1';
         $supplierSettings = ProductStatSupplierSetting::query()
             ->get()
             ->keyBy(fn (ProductStatSupplierSetting $setting) => mb_strtolower($setting->supplier_name));
@@ -729,7 +732,7 @@ class ProductStatController extends Controller
             fn ($a, $b) => strcmp((string) $a->product_name, (string) $b->product_name),
         ])->values();
 
-        $supplierEntries = $supplierFilter === '' ? collect() : $filteredItems
+        $supplierEntries = $supplierFilter === '' && ! $showAll && ! $priorityOnly ? collect() : $filteredItems
             ->flatMap(function ($item) use ($supplierSettings, $supplierStocks) {
                 return collect($item->supplier_names)->map(function ($supplier) use ($item, $supplierSettings, $supplierStocks) {
                     $groupItem = clone $item;
@@ -895,6 +898,7 @@ class ProductStatController extends Controller
             'hurtelStockCheckedAt' => $hurtelStocks->max('checked_at'),
             'fddIncomingUnits' => $fddIncomingUnits,
             's2Preparation' => false,
+            'showAll' => $showAll,
         ];
     }
 

@@ -729,7 +729,7 @@ class ProductStatController extends Controller
             fn ($a, $b) => strcmp((string) $a->product_name, (string) $b->product_name),
         ])->values();
 
-        $supplierEntries = $filteredItems
+        $supplierEntries = $supplierFilter === '' ? collect() : $filteredItems
             ->flatMap(function ($item) use ($supplierSettings, $supplierStocks) {
                 return collect($item->supplier_names)->map(function ($supplier) use ($item, $supplierSettings, $supplierStocks) {
                     $groupItem = clone $item;

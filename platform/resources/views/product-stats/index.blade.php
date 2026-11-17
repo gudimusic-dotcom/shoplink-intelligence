@@ -483,8 +483,8 @@
                 </article>
             @empty
                 <section class="rounded-3xl border border-slate-200 bg-white px-5 py-16 text-center shadow-sm">
-                    <strong class="block text-base font-semibold text-slate-900">Zatiaľ tu nie sú žiadne výsledky.</strong>
-                    <p class="mt-2 text-sm text-slate-500">Skontroluj filter dodávateľa alebo hľadaný produkt.</p>
+                    <strong class="block text-base font-semibold text-slate-900">{{ $supplierFilter === '' ? 'Vyber dodávateľa' : 'Zatiaľ tu nie sú žiadne výsledky.' }}</strong>
+                    <p class="mt-2 text-sm text-slate-500">{{ $supplierFilter === '' ? 'Po výbere sa načítajú iba produkty vybraného dodávateľa.' : 'Skontroluj filter dodávateľa alebo hľadaný produkt.' }}</p>
                 </section>
             @endforelse
         </section>

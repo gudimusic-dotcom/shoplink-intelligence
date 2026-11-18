@@ -143,6 +143,7 @@ class ProductStatController extends Controller
         DB::transaction(function () use ($request, $validated, $rows) {
             ProductStatIncomingItem::query()
                 ->where('supplier_name', 'Fdd')
+                ->where('target_warehouse', $validated['target_warehouse'])
                 ->delete();
 
             foreach (array_chunk($rows, 250) as $chunk) {
@@ -199,8 +200,11 @@ class ProductStatController extends Controller
             );
             $rows = $this->incomingImportService->parseFddCsv($file, $targetWarehouse);
 
-            DB::transaction(function () use ($request, $incomingFeedUrl, $rows): void {
-                ProductStatIncomingItem::query()->where('supplier_name', 'Fdd')->delete();
+            DB::transaction(function () use ($request, $incomingFeedUrl, $targetWarehouse, $rows): void {
+                ProductStatIncomingItem::query()
+                    ->where('supplier_name', 'Fdd')
+                    ->where('target_warehouse', $targetWarehouse)
+                    ->delete();
 
                 foreach (array_chunk($rows, 250) as $chunk) {
                     ProductStatIncomingItem::query()->insert(array_map(fn (array $row) => [

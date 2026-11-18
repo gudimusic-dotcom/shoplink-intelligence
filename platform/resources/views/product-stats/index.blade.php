@@ -352,10 +352,14 @@
                                 <col style="width: 72px;">
                                 <col style="width: 40px;">
                                 <col style="width: 56px;">
+                                @if ($salesChannel !== 'alza')
+                                    <col style="width: 44px;">
+                                @endif
                                 <col style="width: 44px;">
                                 <col style="width: 44px;">
-                                <col style="width: 44px;">
-                                <col style="width: 44px;">
+                                @if ($salesChannel !== 'alza')
+                                    <col style="width: 44px;">
+                                @endif
                                 <col style="width: 44px;">
                                 <col style="width: 44px;">
                                 @if ($s2Preparation)
@@ -379,9 +383,13 @@
                                     <th class="px-0.5 py-3" style="width:40px;">S2</th>
                                     <th class="px-1 py-3" style="width:56px;background:#e11d48;color:#fff;">{{ $s2Preparation ? 'FDD S2' : 'OBJ' }}</th>
                                     <th class="px-0.5 py-3 text-emerald-600" style="width:44px;">Pre</th>
-                                    <th class="px-0.5 py-3 text-teal-600" style="width:44px;">T30</th>
+                                    @if ($salesChannel !== 'alza')
+                                        <th class="px-0.5 py-3 text-teal-600" style="width:44px;">T30</th>
+                                    @endif
                                     <th class="px-0.5 py-3 text-cyan-600" style="width:44px;">T90</th>
-                                    <th class="px-0.5 py-3 text-blue-600" style="width:44px;">{{ $salesChannel === 'alza' ? 'Alza T30' : ($salesChannel === 'non_alza' ? 'Nie Alza T30' : 'P30') }}</th>
+                                    @if ($salesChannel !== 'alza')
+                                        <th class="px-0.5 py-3 text-blue-600" style="width:44px;">{{ $salesChannel === 'non_alza' ? 'Nie Alza T30' : 'P30' }}</th>
+                                    @endif
                                     <th class="px-0.5 py-3 text-amber-600" style="width:44px;">Alz</th>
                                     <th class="px-0.5 py-3 text-orange-600" style="width:44px;">Alz T30</th>
                                     @if ($s2Preparation)
@@ -460,9 +468,13 @@
                                             >
                                         </td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-emerald-600">{{ $item->sales_period }}</td>
-                                        <td class="px-0.5 py-3 text-center font-semibold text-teal-600">{{ $item->trend_t30 ?? '---' }}</td>
+                                        @if ($salesChannel !== 'alza')
+                                            <td class="px-0.5 py-3 text-center font-semibold text-teal-600">{{ $item->trend_t30 ?? '---' }}</td>
+                                        @endif
                                         <td class="px-0.5 py-3 text-center font-semibold text-cyan-600">{{ $item->t90 }}</td>
-                                        <td class="px-0.5 py-3 text-center font-semibold text-blue-600">{{ $item->sales_p30 }}</td>
+                                        @if ($salesChannel !== 'alza')
+                                            <td class="px-0.5 py-3 text-center font-semibold text-blue-600">{{ $item->sales_p30 }}</td>
+                                        @endif
                                         <td class="px-0.5 py-3 text-center font-semibold text-amber-600">{{ $item->market_alza }}</td>
                                         <td class="px-0.5 py-3 text-center font-semibold text-orange-600">{{ $item->alza_t30 }}</td>
                                         @if ($s2Preparation)

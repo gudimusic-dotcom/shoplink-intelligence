@@ -13,6 +13,7 @@ use App\Services\ProductStatsImportService;
 use App\Services\HurtelStockImportService;
 use App\Services\FddStockImportService;
 use App\Services\LogitStockImportService;
+use App\Services\IsotradeStockImportService;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
@@ -31,6 +32,7 @@ class ProductStatController extends Controller
         private readonly HurtelStockImportService $hurtelStockImportService,
         private readonly FddStockImportService $fddStockImportService,
         private readonly LogitStockImportService $logitStockImportService,
+        private readonly IsotradeStockImportService $isotradeStockImportService,
     ) {}
 
     public function index(Request $request): View
@@ -312,7 +314,7 @@ class ProductStatController extends Controller
         validator(
             ['supplier' => $supplier, 'stock_feed_url' => $url],
             [
-                'supplier' => ['required', 'string', 'in:Fdd,Hurtel,Logit'],
+                'supplier' => ['required', 'string', 'in:Fdd,Hurtel,Isotrade,Logit'],
                 'stock_feed_url' => ['required', 'url', 'max:2000'],
             ],
         )->validate();
@@ -323,7 +325,7 @@ class ProductStatController extends Controller
             $response = Http::timeout(120)->retry(2, 1000)->get($url)->throw();
             $contentType = strtolower((string) $response->header('Content-Type'));
             $urlPath = strtolower((string) parse_url($url, PHP_URL_PATH));
-            $extension = in_array($supplier, ['Hurtel', 'Logit'], true)
+            $extension = in_array($supplier, ['Hurtel', 'Isotrade', 'Logit'], true)
                 ? 'xml'
                 : (str_ends_with($urlPath, '.zip') || str_contains($contentType, 'zip') ? 'zip' : 'csv');
 
@@ -341,6 +343,7 @@ class ProductStatController extends Controller
             );
             $rows = match ($supplier) {
                 'Hurtel' => $this->hurtelStockImportService->parse($file),
+                'Isotrade' => $this->isotradeStockImportService->parse($file),
                 'Logit' => $this->logitStockImportService->parse($file),
                 default => $this->fddStockImportService->parse($file),
             };
@@ -395,7 +398,7 @@ class ProductStatController extends Controller
     public function clearSupplierStock(Request $request, string $supplier): RedirectResponse
     {
         $this->authorizeAccess($request);
-        abort_unless(in_array($supplier, ['Fdd', 'Hurtel', 'Logit'], true), 404);
+        abort_unless(in_array($supplier, ['Fdd', 'Hurtel', 'Isotrade', 'Logit'], true), 404);
 
         ProductStatSupplierStock::query()
             ->where('supplier_name', $supplier)

@@ -352,6 +352,9 @@
                                 <col style="width: 72px;">
                                 <col style="width: 40px;">
                                 <col style="width: 56px;">
+                                @if (!$s2Preparation)
+                                    <col style="width: 64px;">
+                                @endif
                                 @if ($salesChannel !== 'alza')
                                     <col style="width: 44px;">
                                 @endif
@@ -382,6 +385,9 @@
                                     <th class="px-0.5 py-3 text-center whitespace-nowrap" style="width:72px;" title="Na ceste S1 / S2">✈ S1/S2</th>
                                     <th class="px-0.5 py-3" style="width:40px;">S2</th>
                                     <th class="px-1 py-3" style="width:56px;background:#e11d48;color:#fff;">{{ $s2Preparation ? 'FDD S2' : 'OBJ' }}</th>
+                                    @if (!$s2Preparation)
+                                        <th class="px-1 py-3 text-rose-700" style="width:64px;">OBJ obr.</th>
+                                    @endif
                                     <th class="px-0.5 py-3 text-emerald-600" style="width:44px;">Pre</th>
                                     @if ($salesChannel !== 'alza')
                                         <th class="px-0.5 py-3 text-teal-600" style="width:44px;">T30</th>
@@ -467,6 +473,9 @@
                                                 class="w-[48px] rounded-md border border-slate-200 bg-rose-50 px-1.5 py-1 text-center text-sm font-semibold text-slate-900 focus:border-rose-300 focus:bg-white focus:outline-none"
                                             >
                                         </td>
+                                        @if (!$s2Preparation)
+                                            <td class="px-1 py-3 text-center font-semibold text-rose-700">{{ $item->recommended_s1_order_turnover }}</td>
+                                        @endif
                                         <td class="px-0.5 py-3 text-center font-semibold text-emerald-600">{{ $item->sales_period }}</td>
                                         @if ($salesChannel !== 'alza')
                                             <td class="px-0.5 py-3 text-center font-semibold text-teal-600">{{ $item->trend_t30 ?? '---' }}</td>

@@ -670,12 +670,15 @@ class ProductStatController extends Controller
             $incomingS2Qty = (int) ($incomingS2ByEan[$item->ean] ?? 0);
             $targetCoverageDays = 45;
             $dailySales = $item->sales_p30 > 0 ? round($item->sales_p30 / 30, 2) : 0.0;
+            $turnoverDays = max(30, (int) ($item->product_age_days ?: 30));
+            $turnoverDailySales = $item->sales_p30 > 0 ? round($item->sales_p30 / $turnoverDays, 4) : 0.0;
             $trendT30 = $periodDays ? (int) round(($item->sales_period / $periodDays) * 30) : null;
             $effectiveS1 = $item->stock_s1 + $incomingQty;
             $s1CoverageDays = $dailySales > 0 ? round($effectiveS1 / $dailySales, 1) : null;
             $totalCoverageDays = $dailySales > 0 ? round(($effectiveS1 + $item->stock_s2) / $dailySales, 1) : null;
             $alzaReadyStock = $item->stock_s1 + $item->stock_s2;
             $recommendedS1 = filled($item->clearance_flag) ? 0 : max(0, (int) ceil(($dailySales * $targetCoverageDays) - $effectiveS1));
+            $recommendedS1ByTurnover = filled($item->clearance_flag) ? 0 : max(0, (int) ceil(($turnoverDailySales * $targetCoverageDays) - $effectiveS1));
 
             $status = $this->resolveStatus(
                 clearanceFlag: $item->clearance_flag,
@@ -690,12 +693,14 @@ class ProductStatController extends Controller
             $item->incoming_s2_qty = $incomingS2Qty;
             $item->effective_stock_s1 = $effectiveS1;
             $item->daily_sales = $dailySales;
+            $item->turnover_daily_sales = $turnoverDailySales;
             $item->trend_t30 = $trendT30;
             $item->s1_coverage_days = $s1CoverageDays;
             $item->total_coverage_days = $totalCoverageDays;
             $item->alza_ready_stock = $alzaReadyStock;
             $item->alza_t30 = $alzaT30;
             $item->recommended_s1_order = $recommendedS1;
+            $item->recommended_s1_order_turnover = $recommendedS1ByTurnover;
             $item->status_meta = $status;
             $item->supplier_names = $this->extractSupplierNames($item->supplier_raw);
 
@@ -770,6 +775,9 @@ class ProductStatController extends Controller
                     $groupItem->recommended_s1_order = filled($groupItem->clearance_flag)
                         ? 0
                         : max(0, (int) ceil(($groupItem->daily_sales * $targetCoverageDays) - $groupItem->effective_stock_s1));
+                    $groupItem->recommended_s1_order_turnover = filled($groupItem->clearance_flag)
+                        ? 0
+                        : max(0, (int) ceil(($groupItem->turnover_daily_sales * $targetCoverageDays) - $groupItem->effective_stock_s1));
 
                     return [
                         'supplier' => $supplier,

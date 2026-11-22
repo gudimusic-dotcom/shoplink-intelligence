@@ -671,7 +671,10 @@ class ProductStatController extends Controller
             $targetCoverageDays = 45;
             $dailySales = $item->sales_p30 > 0 ? round($item->sales_p30 / 30, 2) : 0.0;
             $turnoverDays = max(30, (int) ($item->product_age_days ?: 30));
-            $turnoverDailySales = $item->sales_p30 > 0 ? round($item->sales_p30 / $turnoverDays, 4) : 0.0;
+            $useRecentSales = $item->sales_p30 >= 3 || $item->product_age_days === null || $item->product_age_days < 180;
+            $turnoverDailySales = $item->sales_p30 > 0
+                ? ($useRecentSales ? $dailySales : round($item->sales_p30 / $turnoverDays, 4))
+                : 0.0;
             $trendT30 = $periodDays ? (int) round(($item->sales_period / $periodDays) * 30) : null;
             $effectiveS1 = $item->stock_s1 + $incomingQty;
             $s1CoverageDays = $dailySales > 0 ? round($effectiveS1 / $dailySales, 1) : null;
